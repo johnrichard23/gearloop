@@ -1,12 +1,16 @@
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/home/presentation/screens/main_shell_screen.dart';
+import '../../features/bookings/domain/entities/booking_entity.dart';
 import '../../features/listings/domain/entities/listing_entity.dart';
 import '../../features/listings/presentation/screens/create_listing_screen.dart';
 import '../../features/listings/presentation/screens/listing_detail_screen.dart';
+import '../../features/bookings/presentation/screens/booking_request_screen.dart';
+import '../../features/bookings/presentation/screens/booking_detail_screen.dart';
 
 /// App-wide route definitions. Use with [MaterialApp.router] via [appRouter].
 final GoRouter appRouter = GoRouter(
@@ -41,6 +45,20 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final listing = state.extra as ListingEntity;
         return ListingDetailScreen(listing: listing);
+      },
+    ),
+    GoRoute(
+      path: '/booking-request',
+      builder: (context, state) {
+        final listing = state.extra as ListingEntity;
+        return BookingRequestScreen(listing: listing);
+      },
+    ),
+    GoRoute(
+      path: '/booking-detail',
+      builder: (context, state) {
+        final booking = state.extra as BookingEntity;
+        return BookingDetailScreen(booking: booking);
       },
     ),
   ],
