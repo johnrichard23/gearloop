@@ -673,9 +673,7 @@ class _BottomActionBar extends StatelessWidget {
         label: 'Leave a Review',
         isLoading: isLoading,
         onTap: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Coming soon!')),
-          );
+          context.push('/write-review', extra: booking);
         },
       ));
     } else if (declinedLike) {
