@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../bookings/presentation/screens/my_bookings_screen.dart';
 import '../../../listings/presentation/screens/browse_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 
@@ -20,7 +21,7 @@ class _MainShellScreenState extends State<MainShellScreen> {
     _TabPlaceholder(message: 'Home — coming soon'),
     BrowseScreen(),
     _TabPlaceholder(message: 'Post Gear — coming soon'),
-    _TabPlaceholder(message: 'Bookings — coming soon'),
+    MyBookingsScreen(),
     ProfileScreen(),
   ];
 

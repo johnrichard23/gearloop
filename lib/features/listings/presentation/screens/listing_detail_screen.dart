@@ -102,8 +102,9 @@ class ListingDetailScreen extends StatelessWidget {
           _BottomBar(
             pricePerDay: listing.pricePerDay,
             onBookNow: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Booking coming soon!')),
+              context.push(
+                '/booking-request',
+                extra: listing,
               );
             },
           ),
