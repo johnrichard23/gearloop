@@ -31,6 +31,21 @@ class BookingDetailScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: AppColors.kColorBackground,
+      appBar: AppBar(
+        title: Text(currentBooking.listingTitle),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => context.pop(),
+        ),
+        actions: [
+          if (_showChatAction(currentBooking.status))
+            IconButton(
+              icon: const Icon(Icons.chat_bubble_outline),
+              onPressed: () =>
+                  context.push('/chat', extra: currentBooking),
+            ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
@@ -165,6 +180,12 @@ class BookingDetailScreen extends ConsumerWidget {
       );
     }
   }
+}
+
+bool _showChatAction(BookingStatus status) {
+  return status != BookingStatus.pending &&
+      status != BookingStatus.declined &&
+      status != BookingStatus.cancelled;
 }
 
 class _StatusHeader extends StatelessWidget {
@@ -647,9 +668,7 @@ class _BottomActionBar extends StatelessWidget {
             isLoading: false,
             isOutlined: true,
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Coming soon!')),
-              );
+              context.push('/chat', extra: booking);
             },
           ),
         ],
