@@ -11,6 +11,7 @@ import '../../features/listings/presentation/screens/create_listing_screen.dart'
 import '../../features/listings/presentation/screens/listing_detail_screen.dart';
 import '../../features/bookings/presentation/screens/booking_request_screen.dart';
 import '../../features/bookings/presentation/screens/booking_detail_screen.dart';
+import '../../features/reviews/presentation/screens/write_review_screen.dart';
 
 /// App-wide route definitions. Use with [MaterialApp.router] via [appRouter].
 final GoRouter appRouter = GoRouter(
@@ -59,6 +60,13 @@ final GoRouter appRouter = GoRouter(
       builder: (context, state) {
         final booking = state.extra as BookingEntity;
         return BookingDetailScreen(booking: booking);
+      },
+    ),
+    GoRoute(
+      path: '/write-review',
+      builder: (context, state) {
+        final booking = state.extra as BookingEntity;
+        return WriteReviewScreen(booking: booking);
       },
     ),
   ],
