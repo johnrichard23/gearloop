@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../bookings/presentation/screens/my_bookings_screen.dart';
+import 'home_screen.dart';
 import '../../../listings/presentation/screens/browse_screen.dart';
 import '../../../profile/presentation/screens/profile_screen.dart';
 
@@ -17,13 +18,15 @@ class MainShellScreen extends StatefulWidget {
 class _MainShellScreenState extends State<MainShellScreen> {
   int _selectedIndex = 0;
 
-  static const List<Widget> _tabBodies = [
-    _TabPlaceholder(message: 'Home — coming soon'),
-    BrowseScreen(),
-    _TabPlaceholder(message: 'Post Gear — coming soon'),
-    MyBookingsScreen(),
-    ProfileScreen(),
-  ];
+  List<Widget> get _tabBodies => [
+        HomeScreen(
+          onBrowseTap: () => setState(() => _selectedIndex = 1),
+        ),
+        const BrowseScreen(),
+        const _TabPlaceholder(message: 'Post Gear — coming soon'),
+        const MyBookingsScreen(),
+        const ProfileScreen(),
+      ];
 
   @override
   Widget build(BuildContext context) {
