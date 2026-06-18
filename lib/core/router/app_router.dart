@@ -13,6 +13,9 @@ import '../../features/bookings/presentation/screens/booking_request_screen.dart
 import '../../features/bookings/presentation/screens/booking_detail_screen.dart';
 import '../../features/reviews/presentation/screens/write_review_screen.dart';
 import '../../features/messaging/presentation/screens/chat_screen.dart';
+import '../../features/profile/domain/entities/user_profile_entity.dart';
+import '../../features/profile/presentation/screens/edit_profile_screen.dart';
+import '../../features/notifications/presentation/screens/notification_center_screen.dart';
 
 /// App-wide route definitions. Use with [MaterialApp.router] via [appRouter].
 final GoRouter appRouter = GoRouter(
@@ -76,6 +79,17 @@ final GoRouter appRouter = GoRouter(
         final booking = state.extra as BookingEntity;
         return ChatScreen(booking: booking);
       },
+    ),
+    GoRoute(
+      path: '/edit-profile',
+      builder: (context, state) {
+        final user = state.extra as UserProfileEntity;
+        return EditProfileScreen(user: user);
+      },
+    ),
+    GoRoute(
+      path: '/notifications',
+      builder: (context, state) => const NotificationCenterScreen(),
     ),
   ],
 );
