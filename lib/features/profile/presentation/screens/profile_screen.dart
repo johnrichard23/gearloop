@@ -162,7 +162,8 @@ class ProfileScreen extends StatelessWidget {
               ),
             _ReviewsSection(reviews: _dummyReviews),
             _SettingsSection(
-              onEditProfile: () => _showComingSoon(context),
+              onEditProfile: () =>
+                  context.push('/edit-profile', extra: dummyUser),
               onNotifications: () => _showComingSoon(context),
               onPrivacy: () => _showComingSoon(context),
               onHelp: () => _showComingSoon(context),
