@@ -45,25 +45,60 @@ class ListingModel extends ListingEntity {
   }
 
   factory ListingModel.fromJson(Map<String, dynamic> json) {
+    final coordinates = _parseCoordinates(json['location']);
+
     return ListingModel(
       id: json['id'] as String,
       hostId: json['host_id'] as String,
       title: json['title'] as String,
       category: json['category'] as String,
-      pricePerDay: json['price_per_day'] as String,
+      pricePerDay: _formatPrice(json['price_per_day']),
       location: json['location_label'] as String,
-      hostName: json['host_name'] as String,
-      rating: (json['rating'] as num).toDouble(),
-      isVerified: json['is_verified'] as bool,
+      hostName: json['host_name'] as String? ?? '',
+      rating: (json['rating'] as num?)?.toDouble() ?? 0,
+      isVerified: json['is_verified'] as bool? ?? false,
       description: json['description'] as String,
-      reviewCount: json['review_count'] as int,
-      depositAmount: json['deposit_amount'] as String,
+      reviewCount: json['review_count'] as int? ?? 0,
+      depositAmount: _formatPrice(json['deposit_amount']),
       minRentalDays: json['min_rental_days'].toString(),
-      isActive: json['is_active'] as bool,
-      isPaused: json['is_paused'] as bool,
-      lat: (json['lat'] as num).toDouble(),
-      lng: (json['lng'] as num).toDouble(),
+      isActive: json['is_active'] as bool? ?? true,
+      isPaused: json['is_paused'] as bool? ?? false,
+      lat: coordinates.$1,
+      lng: coordinates.$2,
     );
+  }
+
+  static (double, double) _parseCoordinates(dynamic location) {
+    if (location is! Map<String, dynamic>) {
+      return (0.0, 0.0);
+    }
+    try {
+      final coords = location['coordinates'];
+      if (coords is List && coords.length >= 2) {
+        return (
+          (coords[1] as num).toDouble(),
+          (coords[0] as num).toDouble(),
+        );
+      }
+    } on Exception {
+      // Fall through to default.
+    }
+    return (0.0, 0.0);
+  }
+
+  static String _formatPrice(dynamic value) {
+    if (value == null) {
+      return '₱0';
+    }
+    if (value is String) {
+      return value.startsWith('₱') ? value : '₱$value';
+    }
+    if (value is num) {
+      final amount =
+          value == value.roundToDouble() ? value.toInt() : value.toDouble();
+      return '₱$amount';
+    }
+    return '₱$value';
   }
 
   Map<String, dynamic> toJson() {

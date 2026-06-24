@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
-import '../../../listings/domain/entities/listing_entity.dart';
+import '../../../listings/presentation/providers/listings_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerWidget {
   const HomeScreen({
     required this.onBrowseTap,
     super.key,
@@ -20,66 +21,6 @@ class HomeScreen extends StatelessWidget {
     _CategoryItem('Audio', Icons.mic_outlined),
     _CategoryItem('Lighting', Icons.lightbulb_outline),
     _CategoryItem('Camping', Icons.cabin_outlined),
-  ];
-
-  static const List<ListingEntity> _nearbyListings = [
-    ListingEntity(
-      id: 'listing-1',
-      hostId: 'host-1',
-      title: 'Sony A7III Camera Body',
-      category: 'Cameras',
-      pricePerDay: '₱800',
-      location: 'Legazpi, Albay',
-      hostName: 'Marco R.',
-      rating: 4.8,
-      isVerified: true,
-      description: 'Sony A7III full-frame body in excellent condition.',
-      reviewCount: 12,
-      depositAmount: '₱5,000',
-      minRentalDays: '1',
-      isActive: true,
-      isPaused: false,
-      lat: 13.1391,
-      lng: 123.7438,
-    ),
-    ListingEntity(
-      id: 'listing-2',
-      hostId: 'host-2',
-      title: 'DJI Mini 3 Pro Drone',
-      category: 'Drones',
-      pricePerDay: '₱1,200',
-      location: 'Sorsogon City',
-      hostName: 'Chard D.',
-      rating: 5.0,
-      isVerified: true,
-      description: 'DJI Mini 3 Pro with RC controller.',
-      reviewCount: 18,
-      depositAmount: '₱8,000',
-      minRentalDays: '1',
-      isActive: true,
-      isPaused: false,
-      lat: 12.9734,
-      lng: 124.0067,
-    ),
-    ListingEntity(
-      id: 'listing-5',
-      hostId: 'host-5',
-      title: 'Coleman 4-Person Tent',
-      category: 'Camping',
-      pricePerDay: '₱250',
-      location: 'Bulan, Sorsogon',
-      hostName: 'Leo M.',
-      rating: 4.3,
-      isVerified: false,
-      description: 'Waterproof family tent with easy setup.',
-      reviewCount: 7,
-      depositAmount: '₱1,500',
-      minRentalDays: '1',
-      isActive: true,
-      isPaused: false,
-      lat: 13.1391,
-      lng: 123.7438,
-    ),
   ];
 
   static const List<_HostItem> _topHosts = [
@@ -106,7 +47,9 @@ class HomeScreen extends StatelessWidget {
   ];
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final listingsAsync = ref.watch(listingsProvider);
+
     return Scaffold(
       backgroundColor: AppColors.kColorBackground,
       body: SingleChildScrollView(
@@ -407,140 +350,178 @@ class HomeScreen extends StatelessWidget {
                   ),
                   SizedBox(
                     height: 180,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _nearbyListings.length,
-                      itemBuilder: (context, index) {
-                        final listing = _nearbyListings[index];
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            right: index == _nearbyListings.length - 1
-                                ? 0
-                                : AppSpacing.kSpacing12,
-                          ),
-                          child: GestureDetector(
-                            onTap: () => context.push(
-                              '/listing/${listing.id}',
-                              extra: listing,
-                            ),
-                            child: Container(
-                              width: 140,
-                              decoration: BoxDecoration(
-                                color: AppColors.kColorSurface,
-                                borderRadius:
-                                    BorderRadius.circular(AppSpacing.kRadiusLarge),
-                                border: Border.all(
-                                  color: AppColors.kColorBorder,
-                                  width: 0.5,
-                                ),
+                    child: listingsAsync.when(
+                      loading: () => const Center(
+                        child: CircularProgressIndicator(),
+                      ),
+                      error: (_, __) => Center(
+                        child: TextButton(
+                          onPressed: () => ref.invalidate(listingsProvider),
+                          child: const Text('Could not load listings. Tap to retry.'),
+                        ),
+                      ),
+                      data: (nearbyListings) {
+                        if (nearbyListings.isEmpty) {
+                          return Center(
+                            child: Text(
+                              'No gear listed nearby yet.',
+                              style: AppTextStyles.kTextBodySmall.copyWith(
+                                color: AppColors.kColorTextSecondary,
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Stack(
+                            ),
+                          );
+                        }
+                        return ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: nearbyListings.length,
+                          itemBuilder: (context, index) {
+                            final listing = nearbyListings[index];
+                            return Padding(
+                              padding: EdgeInsets.only(
+                                right: index == nearbyListings.length - 1
+                                    ? 0
+                                    : AppSpacing.kSpacing12,
+                              ),
+                              child: GestureDetector(
+                                onTap: () => context.push(
+                                  '/listing/${listing.id}',
+                                  extra: listing,
+                                ),
+                                child: Container(
+                                  width: 140,
+                                  decoration: BoxDecoration(
+                                    color: AppColors.kColorSurface,
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.kRadiusLarge,
+                                    ),
+                                    border: Border.all(
+                                      color: AppColors.kColorBorder,
+                                      width: 0.5,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Container(
-                                        height: 90,
-                                        width: double.infinity,
-                                        decoration: const BoxDecoration(
-                                          color: AppColors.kColorPrimaryFaded,
-                                          borderRadius: BorderRadius.vertical(
-                                            top: Radius.circular(
-                                              AppSpacing.kRadiusLarge,
+                                      Stack(
+                                        children: [
+                                          Container(
+                                            height: 90,
+                                            width: double.infinity,
+                                            decoration: const BoxDecoration(
+                                              color:
+                                                  AppColors.kColorPrimaryFaded,
+                                              borderRadius:
+                                                  BorderRadius.vertical(
+                                                top: Radius.circular(
+                                                  AppSpacing.kRadiusLarge,
+                                                ),
+                                              ),
+                                            ),
+                                            child: const Center(
+                                              child: Icon(
+                                                Icons.camera_alt_outlined,
+                                                color: AppColors.kColorPrimary,
+                                                size: 24,
+                                              ),
                                             ),
                                           ),
-                                        ),
-                                        child: const Center(
-                                          child: Icon(
-                                            Icons.camera_alt_outlined,
-                                            color: AppColors.kColorPrimary,
-                                            size: 24,
-                                          ),
-                                        ),
+                                          if (listing.isVerified)
+                                            Positioned(
+                                              top: AppSpacing.kSpacing8,
+                                              left: AppSpacing.kSpacing8,
+                                              child: Container(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                  horizontal: 6,
+                                                  vertical: 2,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: AppColors.kColorSurface,
+                                                  borderRadius:
+                                                      BorderRadius.circular(6),
+                                                ),
+                                                child: Row(
+                                                  children: [
+                                                    const Icon(
+                                                      Icons.verified,
+                                                      color: AppColors
+                                                          .kColorSuccess,
+                                                      size: 10,
+                                                    ),
+                                                    const SizedBox(width: 3),
+                                                    Text(
+                                                      'Verified',
+                                                      style: AppTextStyles
+                                                          .kTextCaption
+                                                          .copyWith(
+                                                        color: AppColors
+                                                            .kColorSuccess,
+                                                        fontSize: 8.5,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            ),
+                                        ],
                                       ),
-                                      if (listing.isVerified)
-                                        Positioned(
-                                          top: AppSpacing.kSpacing8,
-                                          left: AppSpacing.kSpacing8,
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6,
-                                              vertical: 2,
+                                      Padding(
+                                        padding: const EdgeInsets.fromLTRB(
+                                          9,
+                                          8,
+                                          11,
+                                          8,
+                                        ),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Text(
+                                              listing.title,
+                                              style: AppTextStyles.kTextLabel,
+                                              maxLines: 2,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
-                                            decoration: BoxDecoration(
-                                              color: AppColors.kColorSurface,
-                                              borderRadius: BorderRadius.circular(6),
+                                            const SizedBox(
+                                              height: AppSpacing.kSpacing4,
                                             ),
-                                            child: Row(
+                                            Row(
                                               children: [
+                                                Text(
+                                                  listing.pricePerDay,
+                                                  style: AppTextStyles
+                                                      .kTextPriceSmall,
+                                                ),
+                                                const Spacer(),
                                                 const Icon(
-                                                  Icons.verified,
-                                                  color: AppColors.kColorSuccess,
+                                                  Icons.star,
+                                                  color: AppColors.kColorWarning,
                                                   size: 10,
                                                 ),
                                                 const SizedBox(width: 3),
                                                 Text(
-                                                  'Verified',
-                                                  style:
-                                                      AppTextStyles.kTextCaption
-                                                          .copyWith(
-                                                    color: AppColors.kColorSuccess,
-                                                    fontSize: 8.5,
+                                                  listing.rating
+                                                      .toStringAsFixed(1),
+                                                  style: AppTextStyles
+                                                      .kTextCaption
+                                                      .copyWith(
+                                                    color: AppColors
+                                                        .kColorTextSecondary,
+                                                    fontSize: 10.5,
                                                   ),
                                                 ),
                                               ],
                                             ),
-                                          ),
-                                        ),
-                                    ],
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.fromLTRB(
-                                      9,
-                                      8,
-                                      11,
-                                      8,
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          listing.title,
-                                          style: AppTextStyles.kTextLabel,
-                                          maxLines: 2,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: AppSpacing.kSpacing4),
-                                        Row(
-                                          children: [
-                                            Text(
-                                              listing.pricePerDay,
-                                              style: AppTextStyles.kTextPriceSmall,
-                                            ),
-                                            const Spacer(),
-                                            const Icon(
-                                              Icons.star,
-                                              color: AppColors.kColorWarning,
-                                              size: 10,
-                                            ),
-                                            const SizedBox(width: 3),
-                                            Text(
-                                              listing.rating.toStringAsFixed(1),
-                                              style: AppTextStyles.kTextCaption
-                                                  .copyWith(
-                                                color: AppColors.kColorTextSecondary,
-                                                fontSize: 10.5,
-                                              ),
-                                            ),
                                           ],
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                          ),
+                            );
+                          },
                         );
                       },
                     ),

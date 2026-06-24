@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../listings/domain/entities/listing_entity.dart';
+import '../../../listings/presentation/providers/listings_provider.dart';
 import '../../domain/entities/user_profile_entity.dart';
 
 const UserProfileEntity dummyUser = UserProfileEntity(
@@ -23,47 +26,6 @@ const UserProfileEntity dummyUser = UserProfileEntity(
   totalListings: 3,
   totalRentals: 8,
 );
-
-const List<ListingEntity> _dummyMyListings = [
-  ListingEntity(
-    id: 'listing-1',
-    hostId: 'user-1',
-    title: 'Sony A7III Camera Body',
-    category: 'Cameras',
-    pricePerDay: '₱800',
-    location: 'Legazpi, Albay',
-    hostName: 'Chard D.',
-    rating: 4.8,
-    isVerified: true,
-    description: 'Sony A7III in excellent condition.',
-    reviewCount: 8,
-    depositAmount: '₱5,000',
-    minRentalDays: '1',
-    isActive: true,
-    isPaused: false,
-    lat: 13.1391,
-    lng: 123.7438,
-  ),
-  ListingEntity(
-    id: 'listing-2',
-    hostId: 'user-1',
-    title: 'DJI Mini 3 Pro Drone',
-    category: 'Drones',
-    pricePerDay: '₱1,200',
-    location: 'Sorsogon City',
-    hostName: 'Chard D.',
-    rating: 5.0,
-    isVerified: true,
-    description: 'DJI Mini 3 Pro with RC controller.',
-    reviewCount: 4,
-    depositAmount: '₱8,000',
-    minRentalDays: '1',
-    isActive: true,
-    isPaused: false,
-    lat: 12.9734,
-    lng: 124.0067,
-  ),
-];
 
 class _DummyReview {
   const _DummyReview({
@@ -109,7 +71,7 @@ const List<_DummyReview> _dummyReviews = [
 ];
 
 /// User profile tab (dummy data until Supabase is wired).
-class ProfileScreen extends StatelessWidget {
+class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   void _showComingSoon(BuildContext context) {
@@ -147,7 +109,16 @@ class ProfileScreen extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final listingsAsync = ref.watch(listingsProvider);
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final myListings = listingsAsync.maybeWhen(
+      data: (listings) => currentUserId == null
+          ? <ListingEntity>[]
+          : listings.where((l) => l.hostId == currentUserId).toList(),
+      orElse: () => <ListingEntity>[],
+    );
+
     return Scaffold(
       backgroundColor: AppColors.kColorBackground,
       body: SingleChildScrollView(
@@ -158,7 +129,10 @@ class ProfileScreen extends StatelessWidget {
             _VerificationsSection(user: dummyUser),
             if (dummyUser.isHost)
               _MyListingsSection(
+                listingsAsync: listingsAsync,
+                myListings: myListings,
                 onSeeAll: () => _showComingSoon(context),
+                onRetry: () => ref.invalidate(listingsProvider),
               ),
             _ReviewsSection(reviews: _dummyReviews),
             _SettingsSection(
@@ -369,9 +343,17 @@ class _VerificationRow extends StatelessWidget {
 }
 
 class _MyListingsSection extends StatelessWidget {
-  const _MyListingsSection({required this.onSeeAll});
+  const _MyListingsSection({
+    required this.listingsAsync,
+    required this.myListings,
+    required this.onSeeAll,
+    required this.onRetry,
+  });
 
+  final AsyncValue<List<ListingEntity>> listingsAsync;
+  final List<ListingEntity> myListings;
   final VoidCallback onSeeAll;
+  final VoidCallback onRetry;
 
   @override
   Widget build(BuildContext context) {
@@ -387,14 +369,44 @@ class _MyListingsSection extends StatelessWidget {
               TextButton(onPressed: onSeeAll, child: const Text('See All')),
             ],
           ),
-          ListView.separated(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: _dummyMyListings.length,
-            separatorBuilder: (_, __) =>
-                const SizedBox(height: AppSpacing.kSpacing12),
-            itemBuilder: (context, index) {
-              return _MyListingCard(listing: _dummyMyListings[index]);
+          listingsAsync.when(
+            loading: () => const Padding(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.kSpacing24),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+            error: (_, __) => Padding(
+              padding: const EdgeInsets.symmetric(
+                vertical: AppSpacing.kSpacing16,
+              ),
+              child: TextButton(
+                onPressed: onRetry,
+                child: const Text('Could not load listings. Tap to retry.'),
+              ),
+            ),
+            data: (_) {
+              if (myListings.isEmpty) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: AppSpacing.kSpacing16,
+                  ),
+                  child: Text(
+                    'You have not posted any gear yet.',
+                    style: AppTextStyles.kTextBodySmall.copyWith(
+                      color: AppColors.kColorTextSecondary,
+                    ),
+                  ),
+                );
+              }
+              return ListView.separated(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: myListings.length,
+                separatorBuilder: (_, __) =>
+                    const SizedBox(height: AppSpacing.kSpacing12),
+                itemBuilder: (context, index) {
+                  return _MyListingCard(listing: myListings[index]);
+                },
+              );
             },
           ),
         ],
