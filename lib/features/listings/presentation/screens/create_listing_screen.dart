@@ -9,6 +9,7 @@ import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../domain/entities/listing_entity.dart';
 import '../providers/create_listing_provider.dart';
+import '../providers/listings_provider.dart';
 
 /// Form to post new gear (mock submit until Supabase is wired).
 class CreateListingScreen extends ConsumerStatefulWidget {
@@ -64,9 +65,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       return;
     }
 
+    // TODO: Replace with real map picker for precise location selection
     final listing = ListingEntity(
       id: '',
-      hostId: 'host-placeholder',
+      hostId: '',
       title: _titleController.text.trim(),
       category: _selectedCategory!,
       pricePerDay: _formatPeso(_priceController.text.trim()),
@@ -80,8 +82,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       minRentalDays: _minDaysController.text.trim(),
       isActive: true,
       isPaused: false,
-      lat: 0,
-      lng: 0,
+      lat: 12.9734,
+      lng: 124.0067,
     );
 
     ref.read(createListingProvider.notifier).submitListing(listing);
@@ -103,6 +105,7 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Gear posted successfully!')),
         );
+        ref.invalidate(listingsProvider);
         ref.read(createListingProvider.notifier).reset();
         context.go('/home');
       } else if (next.status == CreateListingStatus.error &&

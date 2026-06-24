@@ -1,21 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/errors/failures.dart';
+import '../../../../core/widgets/empty_state_widget.dart';
+import '../../../../core/widgets/error_state_widget.dart';
+import '../../../../core/widgets/loading_skeleton.dart';
 import '../../domain/entities/listing_entity.dart';
+import '../providers/listings_provider.dart';
 import '../widgets/listing_card.dart';
 
-/// Browse gear listings (dummy data until backend is wired).
-class BrowseScreen extends StatefulWidget {
+/// Browse gear listings from Supabase.
+class BrowseScreen extends ConsumerStatefulWidget {
   const BrowseScreen({super.key});
 
   @override
-  State<BrowseScreen> createState() => _BrowseScreenState();
+  ConsumerState<BrowseScreen> createState() => _BrowseScreenState();
 }
 
-class _BrowseScreenState extends State<BrowseScreen> {
+class _BrowseScreenState extends ConsumerState<BrowseScreen> {
   static const List<String> _categories = [
     'All',
     'Cameras',
@@ -29,143 +35,20 @@ class _BrowseScreenState extends State<BrowseScreen> {
     'Tools',
   ];
 
-  static const List<ListingEntity> _allListings = [
-    ListingEntity(
-      id: 'listing-1',
-      hostId: 'host-1',
-      title: 'Sony A7III Camera Body',
-      category: 'Cameras',
-      pricePerDay: '₱800',
-      location: 'Legazpi, Albay',
-      hostName: 'Marco R.',
-      rating: 4.8,
-      isVerified: true,
-      description:
-          'Sony A7III full-frame mirrorless camera body in excellent condition. Perfect for portraits, events, and video. Includes battery, charger, and body cap. Lens not included.',
-      reviewCount: 24,
-      depositAmount: '₱5,000',
-      minRentalDays: '1',
-      isActive: true,
-      isPaused: false,
-      lat: 13.1391,
-      lng: 123.7438,
-    ),
-    ListingEntity(
-      id: 'listing-2',
-      hostId: 'host-2',
-      title: 'DJI Mini 3 Pro Drone',
-      category: 'Drones',
-      pricePerDay: '₱1,200',
-      location: 'Sorsogon City',
-      hostName: 'Chard D.',
-      rating: 5.0,
-      isVerified: true,
-      description:
-          'DJI Mini 3 Pro with RC controller. 4K video, obstacle avoidance, 34-min flight time. Includes 2 batteries and carrying case. Operator licensed.',
-      reviewCount: 18,
-      depositAmount: '₱8,000',
-      minRentalDays: '1',
-      isActive: true,
-      isPaused: false,
-      lat: 13.1391,
-      lng: 123.7438,
-    ),
-    ListingEntity(
-      id: 'listing-3',
-      hostId: 'host-3',
-      title: 'Rode VideoMic Pro+',
-      category: 'Audio',
-      pricePerDay: '₱350',
-      location: 'Naga City',
-      hostName: 'Anna S.',
-      rating: 4.5,
-      isVerified: false,
-      description:
-          'Rode VideoMic Pro+ shotgun mic. Great for interviews, vlogs, and run-and-gun video. Includes deadcat windshield and cold shoe mount.',
-      reviewCount: 11,
-      depositAmount: '₱2,000',
-      minRentalDays: '1',
-      isActive: true,
-      isPaused: false,
-      lat: 13.1391,
-      lng: 123.7438,
-    ),
-    ListingEntity(
-      id: 'listing-4',
-      hostId: 'host-4',
-      title: 'Godox SL-60W LED Light',
-      category: 'Lighting',
-      pricePerDay: '₱400',
-      location: 'Legazpi, Albay',
-      hostName: 'Ben T.',
-      rating: 4.7,
-      isVerified: true,
-      description:
-          'Godox SL-60W studio LED light with Bowens mount. Includes softbox diffuser and adjustable light stand. Perfect for portraits and product shoots.',
-      reviewCount: 9,
-      depositAmount: '₱2,500',
-      minRentalDays: '1',
-      isActive: true,
-      isPaused: false,
-      lat: 13.1391,
-      lng: 123.7438,
-    ),
-    ListingEntity(
-      id: 'listing-5',
-      hostId: 'host-5',
-      title: 'Coleman 4-Person Tent',
-      category: 'Camping',
-      pricePerDay: '₱250',
-      location: 'Bulan, Sorsogon',
-      hostName: 'Leo M.',
-      rating: 4.3,
-      isVerified: false,
-      description:
-          'Coleman Sundome 4-person tent. Waterproof, easy setup, great for weekend camping trips. Includes rainfly, stakes, and carry bag. Used twice only.',
-      reviewCount: 7,
-      depositAmount: '₱1,500',
-      minRentalDays: '1',
-      isActive: true,
-      isPaused: false,
-      lat: 13.1391,
-      lng: 123.7438,
-    ),
-    ListingEntity(
-      id: 'listing-6',
-      hostId: 'host-6',
-      title: 'Yamaha Acoustic Guitar',
-      category: 'Instruments',
-      pricePerDay: '₱200',
-      location: 'Sorsogon City',
-      hostName: 'Grace P.',
-      rating: 4.9,
-      isVerified: true,
-      description:
-          'Yamaha F310 acoustic guitar in great condition. Perfect for events, practices, and recordings. Includes soft case and extra strings.',
-      reviewCount: 15,
-      depositAmount: '₱1,200',
-      minRentalDays: '1',
-      isActive: true,
-      isPaused: false,
-      lat: 13.1391,
-      lng: 123.7438,
-    ),
-  ];
-
   String _selectedCategory = 'All';
 
-  List<ListingEntity> get _filteredListings {
+  List<ListingEntity> _filterByCategory(List<ListingEntity> listings) {
     if (_selectedCategory == 'All') {
-      return _allListings;
+      return listings;
     }
-    return _allListings
+    return listings
         .where((listing) => listing.category == _selectedCategory)
         .toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    final listings = _filteredListings;
+    final listingsAsync = ref.watch(listingsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.kColorBackground,
@@ -237,23 +120,64 @@ class _BrowseScreenState extends State<BrowseScreen> {
             ),
             const SizedBox(height: AppSpacing.kSpacing12),
             Expanded(
-              child: GridView.builder(
-                padding: const EdgeInsets.all(AppSpacing.kSpacing16),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: AppSpacing.kSpacing12,
-                  mainAxisSpacing: AppSpacing.kSpacing12,
-                  childAspectRatio: 0.58,
+              child: listingsAsync.when(
+                loading: () => GridView.builder(
+                  padding: const EdgeInsets.all(AppSpacing.kSpacing16),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: AppSpacing.kSpacing12,
+                    mainAxisSpacing: AppSpacing.kSpacing12,
+                    childAspectRatio: 0.58,
+                  ),
+                  itemCount: 6,
+                  itemBuilder: (context, index) {
+                    return const LoadingSkeleton(
+                      width: double.infinity,
+                      height: double.infinity,
+                    );
+                  },
                 ),
-                itemCount: listings.length,
-                itemBuilder: (context, index) {
-                  final listing = listings[index];
-                  return ListingCard(
-                    listing: listing,
-                    onTap: () => context.push(
-                      '/listing/${listing.id}',
-                      extra: listing,
+                error: (error, _) => ErrorStateWidget(
+                  message: error is Failure
+                      ? error.message
+                      : 'Failed to load listings. Please try again.',
+                  onRetry: () => ref.invalidate(listingsProvider),
+                ),
+                data: (allListings) {
+                  final listings = _filterByCategory(allListings);
+                  if (listings.isEmpty) {
+                    return EmptyStateWidget(
+                      title: 'No gear listed yet',
+                      subtitle: _selectedCategory == 'All'
+                          ? 'Be the first to post gear in your area.'
+                          : 'No listings in $_selectedCategory yet.',
+                      icon: Icons.camera_alt_outlined,
+                      action: TextButton(
+                        onPressed: () => context.push('/create-listing'),
+                        child: const Text('Post your gear'),
+                      ),
+                    );
+                  }
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(AppSpacing.kSpacing16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: AppSpacing.kSpacing12,
+                      mainAxisSpacing: AppSpacing.kSpacing12,
+                      childAspectRatio: 0.58,
                     ),
+                    itemCount: listings.length,
+                    itemBuilder: (context, index) {
+                      final listing = listings[index];
+                      return ListingCard(
+                        listing: listing,
+                        onTap: () => context.push(
+                          '/listing/${listing.id}',
+                          extra: listing,
+                        ),
+                      );
+                    },
                   );
                 },
               ),
