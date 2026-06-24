@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -6,15 +7,16 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
+import '../../data/repositories/auth_repository_impl.dart';
 
-class LoginScreen extends StatefulWidget {
+class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -26,14 +28,35 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _onLogin() {
-    if (_formKey.currentState?.validate() ?? false) {
-      context.go('/home');
+  Future<void> _onLogin() async {
+    if (!(_formKey.currentState?.validate() ?? false)) {
+      return;
     }
+
+    final success = await ref.read(authProvider.notifier).signInWithEmail(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+        );
+
+    if (!mounted) {
+      return;
+    }
+
+    if (success) {
+      context.go('/home');
+      return;
+    }
+
+    final message = ref.read(authProvider).errorMessage ??
+        'Something went wrong. Please try again.';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = ref.watch(authProvider).isLoading;
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -83,6 +106,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 AppButton(
                   label: 'Login',
                   onTap: _onLogin,
+                  isLoading: isLoading,
                 ),
                 const SizedBox(height: AppSpacing.kSpacing16),
                 TextButton(
