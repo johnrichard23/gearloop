@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -23,7 +24,9 @@ class BookingDetailScreen extends ConsumerWidget {
     final state = ref.watch(bookingDetailProvider(initialBookingKey));
     final currentBooking = state.booking;
 
-    final isHostView = currentBooking.hostId == 'user-1';
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
+    final isHostView =
+        currentUserId != null && currentBooking.hostId == currentUserId;
 
     final DateFormat fmt = DateFormat('MMM d');
     final formattedDateRange =
