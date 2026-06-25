@@ -1,6 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -42,6 +45,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   ];
 
   String? _selectedCategory;
+  final List<_PickedPhoto> _pickedPhotos = [];
+  final ImagePicker _imagePicker = ImagePicker();
+
+  static const int _maxPhotos = 5;
 
   @override
   void dispose() {
@@ -86,7 +93,33 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       lng: 124.0067,
     );
 
-    ref.read(createListingProvider.notifier).submitListing(listing);
+    ref.read(createListingProvider.notifier).submitListing(
+          listing,
+          photos: _pickedPhotos.map((photo) => photo.file).toList(),
+        );
+  }
+
+  Future<void> _pickPhoto() async {
+    if (_pickedPhotos.length >= _maxPhotos) {
+      return;
+    }
+
+    final image = await _imagePicker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 70,
+    );
+    if (image == null) {
+      return;
+    }
+
+    final bytes = await image.readAsBytes();
+    setState(
+      () => _pickedPhotos.add(_PickedPhoto(file: image, bytes: bytes)),
+    );
+  }
+
+  void _removePhoto(int index) {
+    setState(() => _pickedPhotos.removeAt(index));
   }
 
   String _formatPeso(String value) {
@@ -102,9 +135,20 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
 
     ref.listen<CreateListingState>(createListingProvider, (previous, next) {
       if (next.status == CreateListingStatus.success) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Gear posted successfully!')),
-        );
+        if (!mounted) return;
+        if (next.photoUploadFailed) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'Listing created, but some photos failed to upload',
+              ),
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Gear posted successfully!')),
+          );
+        }
         ref.invalidate(listingsProvider);
         ref.read(createListingProvider.notifier).reset();
         context.go('/home');
@@ -139,6 +183,92 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      Text(
+                        'Photos',
+                        style: AppTextStyles.kTextHeading4,
+                      ),
+                      const SizedBox(height: AppSpacing.kSpacing12),
+                      SizedBox(
+                        height: 60,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          children: [
+                            ...List.generate(_pickedPhotos.length, (index) {
+                              final photo = _pickedPhotos[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(
+                                  right: AppSpacing.kSpacing8,
+                                ),
+                                child: Stack(
+                                  clipBehavior: Clip.none,
+                                  children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(
+                                        AppSpacing.kRadiusMedium,
+                                      ),
+                                      child: Image.memory(
+                                        photo.bytes,
+                                        width: 60,
+                                        height: 60,
+                                        fit: BoxFit.cover,
+                                      ),
+                                    ),
+                                    Positioned(
+                                      top: -6,
+                                      right: -6,
+                                      child: GestureDetector(
+                                        onTap: () => _removePhoto(index),
+                                        child: Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: const BoxDecoration(
+                                            color: AppColors.kColorError,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: const Icon(
+                                            Icons.close,
+                                            color: Colors.white,
+                                            size: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }),
+                            if (_pickedPhotos.length < _maxPhotos)
+                              GestureDetector(
+                                onTap: _pickPhoto,
+                                child: Container(
+                                  width: 60,
+                                  height: 60,
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(
+                                      AppSpacing.kRadiusMedium,
+                                    ),
+                                    border: Border.all(
+                                      color: AppColors.kColorBorder,
+                                    ),
+                                  ),
+                                  child: const Icon(
+                                    Icons.add_a_photo_outlined,
+                                    color: AppColors.kColorTextSecondary,
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.kSpacing8),
+                      Text(
+                        'Add up to 5 photos. Clear photos help renters '
+                        'trust your listing.',
+                        style: AppTextStyles.kTextCaption.copyWith(
+                          color: AppColors.kColorTextSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.kSpacing24),
                       Text(
                         'Gear Details',
                         style: AppTextStyles.kTextHeading4,
@@ -253,6 +383,16 @@ String? _validateRequired(String? value) {
     return 'This field is required';
   }
   return null;
+}
+
+class _PickedPhoto {
+  const _PickedPhoto({
+    required this.file,
+    required this.bytes,
+  });
+
+  final XFile file;
+  final Uint8List bytes;
 }
 
 /// Multiline field matching [AppTextField] styling (maxLines not on AppTextField yet).

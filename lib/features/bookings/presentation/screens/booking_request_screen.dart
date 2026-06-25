@@ -31,6 +31,19 @@ class _BookingRequestScreenState extends ConsumerState<BookingRequestScreen> {
   bool _isSubmitting = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) {
+        return;
+      }
+      ref
+          .read(bookingRequestProvider.notifier)
+          .loadBookedDates(widget.listing.id);
+    });
+  }
+
+  @override
   void dispose() {
     _notesController.dispose();
     super.dispose();
@@ -46,6 +59,14 @@ class _BookingRequestScreenState extends ConsumerState<BookingRequestScreen> {
       initialDate: state.startDate ?? today,
       firstDate: today,
       lastDate: today.add(const Duration(days: 365)),
+      selectableDayPredicate: (date) {
+        return !state.bookedDates.any(
+          (booked) =>
+              booked.year == date.year &&
+              booked.month == date.month &&
+              booked.day == date.day,
+        );
+      },
     );
     if (picked != null) {
       ref.read(bookingRequestProvider.notifier).setStartDate(picked);
@@ -64,6 +85,14 @@ class _BookingRequestScreenState extends ConsumerState<BookingRequestScreen> {
       initialDate: state.endDate ?? minEnd,
       firstDate: minEnd,
       lastDate: minEnd.add(const Duration(days: 365)),
+      selectableDayPredicate: (date) {
+        return !state.bookedDates.any(
+          (booked) =>
+              booked.year == date.year &&
+              booked.month == date.month &&
+              booked.day == date.day,
+        );
+      },
     );
     if (picked != null) {
       ref.read(bookingRequestProvider.notifier).setEndDate(picked);
@@ -207,6 +236,13 @@ class _BookingRequestScreenState extends ConsumerState<BookingRequestScreen> {
                       date: endDate,
                       onTap: startDate != null ? _pickEndDate : null,
                       disabled: startDate == null,
+                    ),
+                    const SizedBox(height: AppSpacing.kSpacing8),
+                    Text(
+                      'Greyed out dates are already booked',
+                      style: AppTextStyles.kTextCaption.copyWith(
+                        color: AppColors.kColorTextSecondary,
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.kSpacing24),
                     if (price != null)

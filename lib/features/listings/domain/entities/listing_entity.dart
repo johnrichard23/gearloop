@@ -20,6 +20,8 @@ class ListingEntity extends Equatable {
     required this.isPaused,
     required this.lat,
     required this.lng,
+    this.photoUrls = const [],
+    this.isCurrentlyRented = false,
   });
 
   final String id;
@@ -39,6 +41,8 @@ class ListingEntity extends Equatable {
   final bool isPaused;
   final double lat;
   final double lng;
+  final List<String> photoUrls;
+  final bool isCurrentlyRented;
 
   @override
   List<Object?> get props => [
@@ -59,5 +63,7 @@ class ListingEntity extends Equatable {
         isPaused,
         lat,
         lng,
+        photoUrls,
+        isCurrentlyRented,
       ];
 }

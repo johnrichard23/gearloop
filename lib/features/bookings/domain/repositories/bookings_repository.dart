@@ -27,4 +27,14 @@ abstract interface class BookingsRepository {
   );
 
   Future<Either<Failure, BookingEntity>> getBookingById(String id);
+
+  Future<Either<Failure, bool>> hasOverlappingBooking({
+    required String listingId,
+    required DateTime startDate,
+    required DateTime endDate,
+  });
+
+  Future<Either<Failure, List<DateTime>>> getBookedDatesForListing(
+    String listingId,
+  );
 }

@@ -253,6 +253,7 @@ To stay focused, GearLoop is deliberately not building these in Phase 1:
 - **Corporate/business accounts** — individual users only at first
 - **Insurance partnerships** — deposit protection handles this in Phase 1
 - **Multiple cities simultaneously** — Bicol region first, then expand
+- **Real-time push/in-app notifications for new messages and booking events** — the Notification Center UI exists with static data, and chat/booking data is fully real via Supabase, but there is currently no mechanism that alerts a user when a new message or booking status change occurs while they're not actively viewing that screen. Users must manually navigate into a booking to discover new activity. This requires either Supabase Realtime subscriptions feeding into the Notification Center, or Firebase Cloud Messaging push notifications (or both), and is the top priority for Phase 2.
 
 ---
 

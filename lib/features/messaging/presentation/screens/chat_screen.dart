@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -23,19 +26,41 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _messageController = TextEditingController();
   final _scrollController = ScrollController();
+  StreamSubscription<List<Map<String, dynamic>>>? _messagesSubscription;
+  late final String _currentUserId;
 
   @override
   void initState() {
     super.initState();
+    _currentUserId = Supabase.instance.client.auth.currentUser!.id;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(chatProvider(widget.booking.id).notifier).loadMessages(
-            widget.booking.id,
-          );
+      _loadInitialMessages();
+      _subscribeToMessages();
+    });
+  }
+
+  Future<void> _loadInitialMessages() async {
+    await ref
+        .read(chatProvider(widget.booking.id).notifier)
+        .loadMessages(widget.booking.id);
+  }
+
+  void _subscribeToMessages() {
+    _messagesSubscription = Supabase.instance.client
+        .from('messages')
+        .stream(primaryKey: ['id'])
+        .eq('booking_id', widget.booking.id)
+        .listen((_) {
+      if (!mounted) return;
+      ref
+          .read(chatProvider(widget.booking.id).notifier)
+          .loadMessages(widget.booking.id);
     });
   }
 
   @override
   void dispose() {
+    _messagesSubscription?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
@@ -157,7 +182,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
         final message = chatState.messages[index];
         return MessageBubble(
           message: message,
-          isMe: message.senderId == 'user-1',
+          isMe: message.senderId == _currentUserId,
         );
       },
     );

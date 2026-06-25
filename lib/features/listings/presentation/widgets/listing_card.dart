@@ -34,12 +34,56 @@ class ListingCard extends StatelessWidget {
             Container(
               height: 140,
               color: AppColors.kColorSurfaceVariant,
-              child: const Center(
-                child: Icon(
-                  Icons.camera_alt_outlined,
-                  color: AppColors.kColorTextHint,
-                  size: AppSpacing.kIconLarge,
-                ),
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  listing.photoUrls.isNotEmpty
+                      ? _ListingNetworkImage(
+                          imageUrl: listing.photoUrls.first,
+                        )
+                      : const Center(
+                          child: Icon(
+                            Icons.camera_alt_outlined,
+                            color: AppColors.kColorTextHint,
+                            size: AppSpacing.kIconLarge,
+                          ),
+                        ),
+                  if (listing.isCurrentlyRented)
+                    Positioned(
+                      top: AppSpacing.kSpacing8,
+                      right: AppSpacing.kSpacing8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: AppColors.kColorWarningLight,
+                          borderRadius:
+                              BorderRadius.circular(AppSpacing.kRadiusSmall),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.schedule,
+                              color: AppColors.kColorWarning,
+                              size: 10,
+                            ),
+                            const SizedBox(width: 3),
+                            Text(
+                              'Rented',
+                              style: AppTextStyles.kTextCaption.copyWith(
+                                color: AppColors.kColorWarning,
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
             Padding(
@@ -99,6 +143,40 @@ class ListingCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ListingNetworkImage extends StatelessWidget {
+  const _ListingNetworkImage({required this.imageUrl});
+
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+        return Container(
+          color: AppColors.kColorSurfaceVariant,
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return Container(
+          color: AppColors.kColorSurfaceVariant,
+          child: const Center(
+            child: Icon(
+              Icons.broken_image_outlined,
+              color: AppColors.kColorTextHint,
+            ),
+          ),
+        );
+      },
     );
   }
 }

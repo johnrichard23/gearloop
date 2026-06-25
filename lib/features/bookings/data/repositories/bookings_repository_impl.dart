@@ -169,6 +169,58 @@ class BookingsRepositoryImpl implements BookingsRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, bool>> hasOverlappingBooking({
+    required String listingId,
+    required DateTime startDate,
+    required DateTime endDate,
+  }) async {
+    try {
+      final data = await _supabase
+          .from('bookings')
+          .select('id')
+          .eq('listing_id', listingId)
+          .inFilter('status', ['accepted', 'active'])
+          .lt('start_date', endDate.toIso8601String())
+          .gt('end_date', startDate.toIso8601String());
+      return Right((data as List).isNotEmpty);
+    } on PostgrestException catch (e) {
+      return Left(Failure(e.message));
+    } on Exception {
+      return Left(
+        const Failure('Failed to check booking availability. Please try again.'),
+      );
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<DateTime>>> getBookedDatesForListing(
+    String listingId,
+  ) async {
+    try {
+      final data = await _supabase
+          .from('bookings')
+          .select('start_date, end_date')
+          .eq('listing_id', listingId)
+          .inFilter('status', ['accepted', 'active']);
+
+      final bookedDates = <DateTime>[];
+      for (final row in data as List) {
+        final map = row as Map<String, dynamic>;
+        final start = _parseBookingDate(map['start_date'] as String);
+        final end = _parseBookingDate(map['end_date'] as String);
+        bookedDates.addAll(_expandDateRange(start, end));
+      }
+      return Right(bookedDates);
+    } on PostgrestException catch (e) {
+      return Left(Failure(e.message));
+    } on Exception {
+      return Left(
+        const Failure('Failed to load booked dates. Please try again.'),
+      );
+    }
+  }
+
   Future<Either<Failure, BookingEntity>> _updateStatus(
     String bookingId,
     String status, {
@@ -226,5 +278,21 @@ class BookingsRepositoryImpl implements BookingsRepository {
     return '${date.year}-'
         '${date.month.toString().padLeft(2, '0')}-'
         '${date.day.toString().padLeft(2, '0')}';
+  }
+
+  DateTime _parseBookingDate(String value) {
+    final parsed = DateTime.parse(value);
+    return DateTime(parsed.year, parsed.month, parsed.day);
+  }
+
+  List<DateTime> _expandDateRange(DateTime start, DateTime end) {
+    final days = <DateTime>[];
+    var current = DateTime(start.year, start.month, start.day);
+    final endDay = DateTime(end.year, end.month, end.day);
+    while (!current.isAfter(endDay)) {
+      days.add(current);
+      current = current.add(const Duration(days: 1));
+    }
+    return days;
   }
 }
