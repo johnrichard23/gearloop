@@ -1,3 +1,5 @@
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../../domain/entities/listing_entity.dart';
 
 /// Data model for gear listings; maps to Supabase `gear_listings` JSON shape.
@@ -20,6 +22,7 @@ class ListingModel extends ListingEntity {
     required super.isPaused,
     required super.lat,
     required super.lng,
+    super.photoUrls,
   });
 
   factory ListingModel.fromEntity(ListingEntity entity) {
@@ -41,6 +44,7 @@ class ListingModel extends ListingEntity {
       isPaused: entity.isPaused,
       lat: entity.lat,
       lng: entity.lng,
+      photoUrls: entity.photoUrls,
     );
   }
 
@@ -65,7 +69,36 @@ class ListingModel extends ListingEntity {
       isPaused: json['is_paused'] as bool? ?? false,
       lat: coordinates.$1,
       lng: coordinates.$2,
+      photoUrls: _parsePhotoUrls(json),
     );
+  }
+
+  static List<String> _parsePhotoUrls(Map<String, dynamic> json) {
+    final photosRaw = json['listing_photos'];
+    if (photosRaw is! List || photosRaw.isEmpty) {
+      return const [];
+    }
+
+    final sorted = photosRaw
+        .map((photo) => photo as Map<String, dynamic>)
+        .toList()
+      ..sort(
+        (a, b) => ((a['display_order'] as num?) ?? 0)
+            .compareTo((b['display_order'] as num?) ?? 0),
+      );
+
+    return sorted
+        .map((photo) {
+          final path = photo['storage_path'] as String?;
+          if (path == null || path.isEmpty) {
+            return null;
+          }
+          return Supabase.instance.client.storage
+              .from('listing-photos')
+              .getPublicUrl(path);
+        })
+        .whereType<String>()
+        .toList();
   }
 
   static (double, double) _parseCoordinates(dynamic location) {
@@ -120,6 +153,7 @@ class ListingModel extends ListingEntity {
       'is_paused': isPaused,
       'lat': lat,
       'lng': lng,
+      'photo_urls': photoUrls,
     };
   }
 }

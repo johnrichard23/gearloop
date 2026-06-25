@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -23,32 +23,30 @@ class HomeScreen extends ConsumerWidget {
     _CategoryItem('Camping', Icons.cabin_outlined),
   ];
 
-  static const List<_HostItem> _topHosts = [
-    _HostItem(
-      name: 'Chard D.',
-      rating: 5.0,
-      color: AppColors.kColorPrimaryFaded,
-    ),
-    _HostItem(
-      name: 'Marco R.',
-      rating: 4.8,
-      color: AppColors.kColorAccentLight,
-    ),
-    _HostItem(
-      name: 'Grace P.',
-      rating: 4.9,
-      color: AppColors.kColorSuccessLight,
-    ),
-    _HostItem(
-      name: 'Ben T.',
-      rating: 4.7,
-      color: AppColors.kColorPrimaryFaded,
-    ),
-  ];
+  static String _filipinoGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) {
+      return 'Magandang umaga';
+    }
+    if (hour < 18) {
+      return 'Magandang hapon';
+    }
+    return 'Magandang gabi';
+  }
+
+  static String _greetingLine(String? fullName) {
+    final trimmed = fullName?.trim();
+    if (trimmed == null || trimmed.isEmpty) {
+      return 'Hi there 👋';
+    }
+    return 'Hi, $trimmed 👋';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final listingsAsync = ref.watch(listingsProvider);
+    final greetingAsync = ref.watch(homeUserGreetingProvider);
+    final topHostsAsync = ref.watch(topRatedHostsProvider);
 
     return Scaffold(
       backgroundColor: AppColors.kColorBackground,
@@ -77,16 +75,30 @@ class HomeScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                'Magandang umaga',
+                                _filipinoGreeting(),
                                 style: AppTextStyles.kTextBodySmall.copyWith(
                                   color: Colors.white.withValues(alpha: 0.65),
                                 ),
                               ),
                               const SizedBox(height: AppSpacing.kSpacing4),
-                              Text(
-                                'Hi, Chard 👋',
-                                style: AppTextStyles.kTextHeading3.copyWith(
-                                  color: Colors.white,
+                              greetingAsync.when(
+                                loading: () => Text(
+                                  'Hi there 👋',
+                                  style: AppTextStyles.kTextHeading3.copyWith(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                error: (_, __) => Text(
+                                  'Hi there 👋',
+                                  style: AppTextStyles.kTextHeading3.copyWith(
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                data: (fullName) => Text(
+                                  _greetingLine(fullName),
+                                  style: AppTextStyles.kTextHeading3.copyWith(
+                                    color: Colors.white,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: AppSpacing.kSpacing8),
@@ -110,6 +122,7 @@ class HomeScreen extends ConsumerWidget {
                                       size: 12,
                                     ),
                                     const SizedBox(width: AppSpacing.kSpacing4),
+                                    // TODO: Replace with real device location or user-set preference in a future iteration
                                     Text(
                                       'Sorsogon City',
                                       style: AppTextStyles.kTextCaption.copyWith(
@@ -140,6 +153,7 @@ class HomeScreen extends ConsumerWidget {
                                   color: Colors.white,
                                 ),
                               ),
+                              // TODO: Wire to real unread notification count once notification system is built
                               Positioned(
                                 right: 2,
                                 top: 2,
@@ -371,14 +385,16 @@ class HomeScreen extends ConsumerWidget {
                             ),
                           );
                         }
+                        final previewListings =
+                            nearbyListings.take(5).toList();
                         return ListView.builder(
                           scrollDirection: Axis.horizontal,
-                          itemCount: nearbyListings.length,
+                          itemCount: previewListings.length,
                           itemBuilder: (context, index) {
-                            final listing = nearbyListings[index];
+                            final listing = previewListings[index];
                             return Padding(
                               padding: EdgeInsets.only(
-                                right: index == nearbyListings.length - 1
+                                right: index == previewListings.length - 1
                                     ? 0
                                     : AppSpacing.kSpacing12,
                               ),
@@ -405,25 +421,74 @@ class HomeScreen extends ConsumerWidget {
                                     children: [
                                       Stack(
                                         children: [
-                                          Container(
-                                            height: 90,
-                                            width: double.infinity,
-                                            decoration: const BoxDecoration(
-                                              color:
-                                                  AppColors.kColorPrimaryFaded,
-                                              borderRadius:
-                                                  BorderRadius.vertical(
-                                                top: Radius.circular(
-                                                  AppSpacing.kRadiusLarge,
-                                                ),
+                                          ClipRRect(
+                                            borderRadius:
+                                                const BorderRadius.vertical(
+                                              top: Radius.circular(
+                                                AppSpacing.kRadiusLarge,
                                               ),
                                             ),
-                                            child: const Center(
-                                              child: Icon(
-                                                Icons.camera_alt_outlined,
-                                                color: AppColors.kColorPrimary,
-                                                size: 24,
-                                              ),
+                                            child: SizedBox(
+                                              height: 90,
+                                              width: double.infinity,
+                                              child: listing
+                                                      .photoUrls.isNotEmpty
+                                                  ? Image.network(
+                                                      listing.photoUrls.first,
+                                                      fit: BoxFit.cover,
+                                                      width: double.infinity,
+                                                      height: 90,
+                                                      loadingBuilder: (
+                                                        context,
+                                                        child,
+                                                        progress,
+                                                      ) =>
+                                                          progress == null
+                                                              ? child
+                                                              : Container(
+                                                                  color: AppColors
+                                                                      .kColorSurfaceVariant,
+                                                                  child:
+                                                                      const Center(
+                                                                    child:
+                                                                        CircularProgressIndicator(
+                                                                      strokeWidth:
+                                                                          2,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                      errorBuilder: (
+                                                        context,
+                                                        error,
+                                                        stackTrace,
+                                                      ) =>
+                                                          Container(
+                                                        color: AppColors
+                                                            .kColorSurfaceVariant,
+                                                        child: const Icon(
+                                                          Icons
+                                                              .broken_image_outlined,
+                                                          color: AppColors
+                                                              .kColorTextHint,
+                                                        ),
+                                                      ),
+                                                    )
+                                                  : Container(
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                        color: AppColors
+                                                            .kColorPrimaryFaded,
+                                                      ),
+                                                      child: const Center(
+                                                        child: Icon(
+                                                          Icons
+                                                              .camera_alt_outlined,
+                                                          color: AppColors
+                                                              .kColorPrimary,
+                                                          size: 24,
+                                                        ),
+                                                      ),
+                                                    ),
                                             ),
                                           ),
                                           if (listing.isVerified)
@@ -527,84 +592,110 @@ class HomeScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: AppSpacing.kSpacing24),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'Top rated hosts',
-                        style: AppTextStyles.kTextHeading4,
+                  topHostsAsync.when(
+                    loading: () => const SizedBox(
+                      height: 90,
+                      child: Center(
+                        child: CircularProgressIndicator(),
                       ),
-                      TextButton(
-                        onPressed: () {},
-                        child: Text(
-                          'See all',
-                          style: AppTextStyles.kTextBodyMedium.copyWith(
-                            color: AppColors.kColorPrimary,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 90,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: _topHosts.length,
-                      itemBuilder: (context, index) {
-                        final host = _topHosts[index];
-                        return Padding(
-                          padding: EdgeInsets.only(
-                            right: index == _topHosts.length - 1
-                                ? 0
-                                : AppSpacing.kSpacing16,
-                          ),
-                          child: SizedBox(
-                            width: 68,
-                            child: Column(
-                              children: [
-                                CircleAvatar(
-                                  radius: 28,
-                                  backgroundColor: host.color,
-                                  child: Text(
-                                    host.initials,
-                                    style: AppTextStyles.kTextHeading4.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                    ),
+                    error: (_, __) => const SizedBox.shrink(),
+                    data: (topHosts) {
+                      if (topHosts.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Top rated hosts',
+                                style: AppTextStyles.kTextHeading4,
+                              ),
+                              TextButton(
+                                onPressed: () {},
+                                child: Text(
+                                  'See all',
+                                  style: AppTextStyles.kTextBodyMedium.copyWith(
+                                    color: AppColors.kColorPrimary,
                                   ),
                                 ),
-                                const SizedBox(height: AppSpacing.kSpacing4),
-                                Text(
-                                  host.name,
-                                  style: AppTextStyles.kTextCaption.copyWith(
-                                    color: AppColors.kColorTextPrimary,
-                                    fontSize: 10.5,
+                              ),
+                            ],
+                          ),
+                          SizedBox(
+                            height: 90,
+                            child: ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: topHosts.length,
+                              itemBuilder: (context, index) {
+                                final host = topHosts[index];
+                                return Padding(
+                                  padding: EdgeInsets.only(
+                                    right: index == topHosts.length - 1
+                                        ? 0
+                                        : AppSpacing.kSpacing16,
                                   ),
-                                  textAlign: TextAlign.center,
-                                ),
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(
-                                      Icons.star,
-                                      color: AppColors.kColorWarning,
-                                      size: 9,
+                                  child: SizedBox(
+                                    width: 68,
+                                    child: Column(
+                                      children: [
+                                        CircleAvatar(
+                                          radius: 28,
+                                          backgroundColor: host.color,
+                                          child: Text(
+                                            host.initials,
+                                            style: AppTextStyles.kTextHeading4
+                                                .copyWith(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(
+                                          height: AppSpacing.kSpacing4,
+                                        ),
+                                        Text(
+                                          host.name,
+                                          style: AppTextStyles.kTextCaption
+                                              .copyWith(
+                                            color: AppColors.kColorTextPrimary,
+                                            fontSize: 10.5,
+                                          ),
+                                          textAlign: TextAlign.center,
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            const Icon(
+                                              Icons.star,
+                                              color: AppColors.kColorWarning,
+                                              size: 9,
+                                            ),
+                                            const SizedBox(width: 2),
+                                            Text(
+                                              host.rating.toStringAsFixed(1),
+                                              style: AppTextStyles.kTextCaption
+                                                  .copyWith(
+                                                color: AppColors
+                                                    .kColorTextSecondary,
+                                                fontSize: 10,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
                                     ),
-                                    const SizedBox(width: 2),
-                                    Text(
-                                      host.rating.toStringAsFixed(1),
-                                      style: AppTextStyles.kTextCaption.copyWith(
-                                        color: AppColors.kColorTextSecondary,
-                                        fontSize: 10,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ],
+                                  ),
+                                );
+                              },
                             ),
                           ),
-                        );
-                      },
-                    ),
+                        ],
+                      );
+                    },
                   ),
                   const SizedBox(height: AppSpacing.kSpacing24),
                   GestureDetector(
@@ -691,3 +782,58 @@ class _HostItem {
   }
 }
 
+final homeUserGreetingProvider = FutureProvider<String?>((ref) async {
+  final userId = Supabase.instance.client.auth.currentUser?.id;
+  if (userId == null) {
+    return null;
+  }
+  try {
+    final data = await Supabase.instance.client
+        .from('users')
+        .select('full_name')
+        .eq('id', userId)
+        .single();
+    return data['full_name'] as String?;
+  } on Exception {
+    return null;
+  }
+});
+
+final topRatedHostsProvider = FutureProvider<List<_HostItem>>((ref) async {
+  try {
+    final data = await Supabase.instance.client
+        .from('users')
+        .select('id, full_name, rating_avg')
+        .eq('is_host', true)
+        .gt('rating_count', 0)
+        .order('rating_avg', ascending: false)
+        .limit(4);
+
+    const avatarColors = [
+      AppColors.kColorPrimaryFaded,
+      AppColors.kColorAccentLight,
+      AppColors.kColorSuccessLight,
+      AppColors.kColorPrimaryFaded,
+    ];
+
+    final hosts = <_HostItem>[];
+    for (final row in data as List) {
+      final map = row as Map<String, dynamic>;
+      final name = map['full_name'] as String?;
+      if (name == null || name.trim().isEmpty) {
+        continue;
+      }
+      final rating = (map['rating_avg'] as num?)?.toDouble() ?? 0;
+      hosts.add(
+        _HostItem(
+          name: name.trim(),
+          rating: rating,
+          color: avatarColors[hosts.length % avatarColors.length],
+        ),
+      );
+    }
+    return hosts;
+  } on Exception {
+    return [];
+  }
+});

@@ -14,6 +14,9 @@ class ListingsRepositoryImpl implements ListingsRepository {
 
   final SupabaseClient _supabase;
 
+  static const _listingSelect =
+      '*, listing_photos(storage_path, display_order)';
+
   @override
   Future<Either<Failure, ListingEntity>> createListing(
     ListingEntity listing,
@@ -24,7 +27,7 @@ class ListingsRepositoryImpl implements ListingsRepository {
       final data = await _supabase
           .from('gear_listings')
           .insert(_toRow(listing, hostId: hostId))
-          .select()
+          .select(_listingSelect)
           .single();
       return Right(ListingModel.fromJson(data));
     } on PostgrestException catch (e) {
@@ -45,7 +48,7 @@ class ListingsRepositoryImpl implements ListingsRepository {
           .from('gear_listings')
           .update(_toRow(listing))
           .eq('id', listing.id)
-          .select()
+          .select(_listingSelect)
           .single();
       return Right(ListingModel.fromJson(data));
     } on PostgrestException catch (e) {
@@ -67,14 +70,26 @@ class ListingsRepositoryImpl implements ListingsRepository {
       // TODO: Add PostGIS distance filtering via RPC function once ST_DWithin query is set up
       final response = await _supabase
           .from('gear_listings')
-          .select()
+          .select(_listingSelect)
           .eq('is_active', true)
           .eq('is_paused', false);
       debugPrint('RAW LISTINGS RESPONSE: $response');
       final listings = (response as List)
           .map((row) => ListingModel.fromJson(row as Map<String, dynamic>))
           .toList();
-      return Right(listings);
+      final rentedIds = await _fetchCurrentlyRentedListingIds(
+        listings.map((listing) => listing.id).toList(),
+      );
+      return Right(
+        listings
+            .map(
+              (listing) => _withCurrentlyRented(
+                listing,
+                rentedIds.contains(listing.id),
+              ),
+            )
+            .toList(),
+      );
     } on PostgrestException catch (e) {
       return Left(Failure(e.message));
     } on Exception {
@@ -89,10 +104,14 @@ class ListingsRepositoryImpl implements ListingsRepository {
     try {
       final data = await _supabase
           .from('gear_listings')
-          .select()
+          .select(_listingSelect)
           .eq('id', id)
           .single();
-      return Right(ListingModel.fromJson(data));
+      final listing = ListingModel.fromJson(data);
+      final rentedIds = await _fetchCurrentlyRentedListingIds([listing.id]);
+      return Right(
+        _withCurrentlyRented(listing, rentedIds.contains(listing.id)),
+      );
     } on PostgrestException {
       return const Left(Failure('Listing not found'));
     } on Exception {
@@ -155,5 +174,60 @@ class ListingsRepositoryImpl implements ListingsRepository {
       return 0;
     }
     return double.parse(cleaned);
+  }
+
+  String _todayDateString() {
+    final today = DateTime.now();
+    return '${today.year}-'
+        '${today.month.toString().padLeft(2, '0')}-'
+        '${today.day.toString().padLeft(2, '0')}';
+  }
+
+  Future<Set<String>> _fetchCurrentlyRentedListingIds(
+    List<String> listingIds,
+  ) async {
+    if (listingIds.isEmpty) {
+      return {};
+    }
+
+    final today = _todayDateString();
+    final data = await _supabase
+        .from('bookings')
+        .select('listing_id')
+        .eq('status', 'active')
+        .inFilter('listing_id', listingIds)
+        .lte('start_date', today)
+        .gte('end_date', today);
+
+    return (data as List)
+        .map((row) => (row as Map<String, dynamic>)['listing_id'] as String)
+        .toSet();
+  }
+
+  ListingEntity _withCurrentlyRented(
+    ListingEntity listing,
+    bool isCurrentlyRented,
+  ) {
+    return ListingEntity(
+      id: listing.id,
+      hostId: listing.hostId,
+      title: listing.title,
+      category: listing.category,
+      pricePerDay: listing.pricePerDay,
+      location: listing.location,
+      hostName: listing.hostName,
+      rating: listing.rating,
+      isVerified: listing.isVerified,
+      description: listing.description,
+      reviewCount: listing.reviewCount,
+      depositAmount: listing.depositAmount,
+      minRentalDays: listing.minRentalDays,
+      isActive: listing.isActive,
+      isPaused: listing.isPaused,
+      lat: listing.lat,
+      lng: listing.lng,
+      photoUrls: listing.photoUrls,
+      isCurrentlyRented: isCurrentlyRented,
+    );
   }
 }

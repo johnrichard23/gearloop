@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -26,6 +27,10 @@ class ListingDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final currentUserId =
+        Supabase.instance.client.auth.currentUser?.id;
+    final isOwnListing = currentUserId == listing.hostId;
+
     return Scaffold(
       backgroundColor: AppColors.kColorBackground,
       body: Column(
@@ -35,7 +40,47 @@ class ListingDetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _PhotoSection(onBack: () => context.pop()),
+                  _PhotoSection(
+                    photoUrls: listing.photoUrls,
+                    onBack: () => context.pop(),
+                  ),
+                  if (isOwnListing)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        AppSpacing.kSpacing16,
+                        AppSpacing.kSpacing16,
+                        AppSpacing.kSpacing16,
+                        0,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.all(AppSpacing.kSpacing12),
+                        decoration: BoxDecoration(
+                          color: AppColors.kColorPrimaryFaded,
+                          borderRadius: BorderRadius.circular(
+                            AppSpacing.kRadiusMedium,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.visibility_outlined,
+                              color: AppColors.kColorPrimary,
+                              size: 16,
+                            ),
+                            const SizedBox(width: AppSpacing.kSpacing8),
+                            Expanded(
+                              child: Text(
+                                'Viewing as host — this is how renters '
+                                'see your listing below',
+                                style: AppTextStyles.kTextBodySmall.copyWith(
+                                  color: AppColors.kColorPrimary,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   Padding(
                     padding: const EdgeInsets.all(AppSpacing.kSpacing16),
                     child: Column(
@@ -99,57 +144,169 @@ class ListingDetailScreen extends StatelessWidget {
               ),
             ),
           ),
-          _BottomBar(
-            pricePerDay: listing.pricePerDay,
-            onBookNow: () {
-              context.push(
-                '/booking-request',
-                extra: listing,
-              );
-            },
-          ),
+          if (isOwnListing)
+            _OwnListingBottomBar(
+              onEdit: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Edit coming soon!')),
+                );
+              },
+            )
+          else
+            _BottomBar(
+              pricePerDay: listing.pricePerDay,
+              onBookNow: () {
+                context.push(
+                  '/booking-request',
+                  extra: listing,
+                );
+              },
+            ),
         ],
       ),
     );
   }
 }
 
-class _PhotoSection extends StatelessWidget {
-  const _PhotoSection({required this.onBack});
+class _PhotoSection extends StatefulWidget {
+  const _PhotoSection({
+    required this.photoUrls,
+    required this.onBack,
+  });
 
+  final List<String> photoUrls;
   final VoidCallback onBack;
 
   @override
+  State<_PhotoSection> createState() => _PhotoSectionState();
+}
+
+class _PhotoSectionState extends State<_PhotoSection> {
+  late final PageController _pageController;
+  int _currentPage = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 260,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          const ColoredBox(
-            color: AppColors.kColorSurfaceVariant,
-            child: Center(
-              child: Icon(
-                Icons.camera_alt_outlined,
-                color: AppColors.kColorTextHint,
-                size: AppSpacing.kIconXLarge,
+    final hasPhotos = widget.photoUrls.isNotEmpty;
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 260,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              if (hasPhotos)
+                PageView.builder(
+                  controller: _pageController,
+                  onPageChanged: (index) {
+                    setState(() => _currentPage = index);
+                  },
+                  itemCount: widget.photoUrls.length,
+                  itemBuilder: (context, index) {
+                    return _DetailNetworkImage(
+                      imageUrl: widget.photoUrls[index],
+                    );
+                  },
+                )
+              else
+                const ColoredBox(
+                  color: AppColors.kColorSurfaceVariant,
+                  child: Center(
+                    child: Icon(
+                      Icons.camera_alt_outlined,
+                      color: AppColors.kColorTextHint,
+                      size: AppSpacing.kIconXLarge,
+                    ),
+                  ),
+                ),
+              Positioned(
+                top: MediaQuery.paddingOf(context).top + AppSpacing.kSpacing8,
+                left: AppSpacing.kSpacing8,
+                child: IconButton(
+                  onPressed: widget.onBack,
+                  icon: const Icon(Icons.arrow_back),
+                  style: IconButton.styleFrom(
+                    backgroundColor: AppColors.kColorSurface,
+                    foregroundColor: AppColors.kColorTextPrimary,
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
-          Positioned(
-            top: MediaQuery.paddingOf(context).top + AppSpacing.kSpacing8,
-            left: AppSpacing.kSpacing8,
-            child: IconButton(
-              onPressed: onBack,
-              icon: const Icon(Icons.arrow_back),
-              style: IconButton.styleFrom(
-                backgroundColor: AppColors.kColorSurface,
-                foregroundColor: AppColors.kColorTextPrimary,
-              ),
-            ),
+        ),
+        if (hasPhotos && widget.photoUrls.length > 1) ...[
+          const SizedBox(height: AppSpacing.kSpacing8),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(widget.photoUrls.length, (index) {
+              final isActive = index == _currentPage;
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 3),
+                child: Container(
+                  width: isActive ? 8 : 6,
+                  height: isActive ? 8 : 6,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: isActive
+                        ? AppColors.kColorPrimary
+                        : AppColors.kColorBorder,
+                  ),
+                ),
+              );
+            }),
           ),
+          const SizedBox(height: AppSpacing.kSpacing8),
         ],
-      ),
+      ],
+    );
+  }
+}
+
+class _DetailNetworkImage extends StatelessWidget {
+  const _DetailNetworkImage({required this.imageUrl});
+
+  final String imageUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    return Image.network(
+      imageUrl,
+      fit: BoxFit.cover,
+      width: double.infinity,
+      height: double.infinity,
+      loadingBuilder: (context, child, loadingProgress) {
+        if (loadingProgress == null) {
+          return child;
+        }
+        return const ColoredBox(
+          color: AppColors.kColorSurfaceVariant,
+        );
+      },
+      errorBuilder: (context, error, stackTrace) {
+        return const ColoredBox(
+          color: AppColors.kColorSurfaceVariant,
+          child: Center(
+            child: Icon(
+              Icons.broken_image_outlined,
+              color: AppColors.kColorTextHint,
+              size: AppSpacing.kIconXLarge,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -318,6 +475,52 @@ class _PricingRow extends StatelessWidget {
           style: valueStyle ?? AppTextStyles.kTextBodyMedium,
         ),
       ],
+    );
+  }
+}
+
+class _OwnListingBottomBar extends StatelessWidget {
+  const _OwnListingBottomBar({required this.onEdit});
+
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: AppColors.kColorSurface,
+        border: Border(top: BorderSide(color: AppColors.kColorBorder)),
+      ),
+      padding: const EdgeInsets.all(AppSpacing.kSpacing16),
+      child: SafeArea(
+        top: false,
+        child: Row(
+          children: [
+            const Icon(
+              Icons.info_outline,
+              color: AppColors.kColorTextSecondary,
+              size: 18,
+            ),
+            const SizedBox(width: AppSpacing.kSpacing8),
+            Expanded(
+              child: Text(
+                'This is your listing',
+                style: AppTextStyles.kTextBodySmall.copyWith(
+                  color: AppColors.kColorTextSecondary,
+                ),
+              ),
+            ),
+            SizedBox(
+              width: 100,
+              child: AppButton(
+                label: 'Edit',
+                isOutlined: true,
+                onTap: onEdit,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

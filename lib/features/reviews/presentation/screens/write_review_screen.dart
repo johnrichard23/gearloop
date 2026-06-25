@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -41,8 +42,9 @@ class _WriteReviewScreenState extends ConsumerState<WriteReviewScreen> {
     final state = ref.watch(writeReviewProvider);
     final notifier = ref.read(writeReviewProvider.notifier);
     final booking = widget.booking;
+    final currentUserId = Supabase.instance.client.auth.currentUser!.id;
 
-    final isHostView = booking.hostId == 'user-1';
+    final isHostView = booking.hostId == currentUserId;
     final revieweeId = isHostView ? booking.renterId : booking.hostId;
 
     ref.listen<WriteReviewState>(writeReviewProvider, (prev, next) {
@@ -137,7 +139,7 @@ class _WriteReviewScreenState extends ConsumerState<WriteReviewScreen> {
                     final comment = _commentController.text.trim();
                     notifier.submit(
                       bookingId: booking.id,
-                      reviewerId: 'user-1',
+                      reviewerId: currentUserId,
                       revieweeId: revieweeId,
                       comment: comment.isEmpty ? null : comment,
                     );

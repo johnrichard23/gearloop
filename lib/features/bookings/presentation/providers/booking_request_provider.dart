@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../listings/domain/entities/listing_entity.dart';
 import '../../data/repositories/bookings_repository_impl.dart';
 import '../../domain/entities/booking_entity.dart';
+import '../../domain/repositories/bookings_repository.dart';
 import '../../domain/usecases/create_booking_request.dart';
 
 enum BookingRequestStatus {
@@ -19,6 +20,7 @@ class BookingRequestState {
     this.startDate,
     this.endDate,
     this.createdBooking,
+    this.bookedDates = const [],
   });
 
   final BookingRequestStatus status;
@@ -26,6 +28,7 @@ class BookingRequestState {
   final DateTime? startDate;
   final DateTime? endDate;
   final BookingEntity? createdBooking;
+  final List<DateTime> bookedDates;
 
   BookingRequestState copyWith({
     BookingRequestStatus? status,
@@ -33,6 +36,7 @@ class BookingRequestState {
     DateTime? startDate,
     DateTime? endDate,
     BookingEntity? createdBooking,
+    List<DateTime>? bookedDates,
     bool clearError = false,
     bool clearBooking = false,
   }) {
@@ -43,15 +47,17 @@ class BookingRequestState {
       endDate: endDate ?? this.endDate,
       createdBooking:
           clearBooking ? null : (createdBooking ?? this.createdBooking),
+      bookedDates: bookedDates ?? this.bookedDates,
     );
   }
 }
 
 class BookingRequestNotifier extends StateNotifier<BookingRequestState> {
-  BookingRequestNotifier(this._createBookingRequest)
+  BookingRequestNotifier(this._createBookingRequest, this._repository)
       : super(const BookingRequestState());
 
   final CreateBookingRequest _createBookingRequest;
+  final BookingsRepository _repository;
 
   void setStartDate(DateTime date) {
     state = state.copyWith(
@@ -70,6 +76,14 @@ class BookingRequestNotifier extends StateNotifier<BookingRequestState> {
       clearError: true,
       clearBooking: true,
       status: BookingRequestStatus.idle,
+    );
+  }
+
+  Future<void> loadBookedDates(String listingId) async {
+    final result = await _repository.getBookedDatesForListing(listingId);
+    result.fold(
+      (_) => state = state.copyWith(bookedDates: const []),
+      (dates) => state = state.copyWith(bookedDates: dates),
     );
   }
 
@@ -125,6 +139,6 @@ final bookingRequestProvider =
     StateNotifierProvider<BookingRequestNotifier, BookingRequestState>((ref) {
   final repository = BookingsRepositoryImpl();
   final createBooking = CreateBookingRequest(repository);
-  return BookingRequestNotifier(createBooking);
+  return BookingRequestNotifier(createBooking, repository);
 });
 

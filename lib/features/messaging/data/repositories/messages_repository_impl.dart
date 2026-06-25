@@ -1,74 +1,40 @@
 import 'package:dartz/dartz.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/errors/failures.dart';
 import '../../domain/entities/message_entity.dart';
 import '../../domain/repositories/messages_repository.dart';
 
+/// [MessagesRepository] backed by Supabase `messages`.
 class MessagesRepositoryImpl implements MessagesRepository {
-  static final List<MessageEntity> _store = _seedMessages();
+  MessagesRepositoryImpl([Object? unused, SupabaseClient? client])
+      : _supabase = client ?? Supabase.instance.client;
 
-  static List<MessageEntity> _seedMessages() {
-    final now = DateTime.now();
+  final SupabaseClient _supabase;
 
-    return [
-      MessageEntity(
-        id: 'message-1',
-        bookingId: 'booking-2',
-        senderId: 'user-3',
-        senderName: 'Marco R.',
-        content:
-            'Hi! Thanks for booking the drone. What time works for pickup?',
-        isRead: true,
-        createdAt: now.subtract(const Duration(days: 1)),
-      ),
-      MessageEntity(
-        id: 'message-2',
-        bookingId: 'booking-2',
-        senderId: 'user-1',
-        senderName: 'Chard D.',
-        content: 'Hi Marco! Would tomorrow around 2pm work for you?',
-        isRead: true,
-        createdAt: now.subtract(const Duration(hours: 23)),
-      ),
-      MessageEntity(
-        id: 'message-3',
-        bookingId: 'booking-2',
-        senderId: 'user-3',
-        senderName: 'Marco R.',
-        content:
-            'That works great. I am in Legazpi, near the public market. I will send the exact pin once you confirm.',
-        isRead: true,
-        createdAt: now.subtract(const Duration(hours: 22)),
-      ),
-      MessageEntity(
-        id: 'message-4',
-        bookingId: 'booking-2',
-        senderId: 'user-1',
-        senderName: 'Chard D.',
-        content: 'Perfect, see you then!',
-        isRead: true,
-        createdAt: now.subtract(const Duration(hours: 21)),
-      ),
-    ];
-  }
-
-  Future<void> _simulateDelay() {
-    return Future<void>.delayed(const Duration(milliseconds: 300));
-  }
+  static const _messageSelect =
+      '*, sender:users!sender_id(full_name)';
 
   @override
   Future<Either<Failure, List<MessageEntity>>> getMessagesForBooking(
     String bookingId,
   ) async {
     try {
-      await _simulateDelay();
-      final messages = _store
-          .where((message) => message.bookingId == bookingId)
-          .toList()
-        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      final data = await _supabase
+          .from('messages')
+          .select(_messageSelect)
+          .eq('booking_id', bookingId)
+          .order('created_at', ascending: true);
+      final messages = (data as List)
+          .map((row) => _fromJson(row as Map<String, dynamic>))
+          .toList();
       return Right(messages);
-    } on Exception catch (e) {
-      return Left(Failure(e.toString()));
+    } on PostgrestException catch (e) {
+      return Left(Failure(e.message));
+    } on Exception {
+      return const Left(
+        Failure('Failed to load messages. Please try again.'),
+      );
     }
   }
 
@@ -80,26 +46,43 @@ class MessagesRepositoryImpl implements MessagesRepository {
     required String content,
   }) async {
     try {
-      await _simulateDelay();
-
       final trimmed = content.trim();
       if (trimmed.isEmpty) {
-        throw Exception('Message cannot be empty');
+        return const Left(Failure('Message cannot be empty'));
       }
 
-      final message = MessageEntity(
-        id: 'message-${DateTime.now().microsecondsSinceEpoch}',
-        bookingId: bookingId,
-        senderId: senderId,
-        senderName: senderName,
-        content: trimmed,
-        isRead: false,
-        createdAt: DateTime.now(),
+      final effectiveSenderId = _supabase.auth.currentUser!.id;
+      final data = await _supabase
+          .from('messages')
+          .insert({
+            'booking_id': bookingId,
+            'sender_id': effectiveSenderId,
+            'content': trimmed,
+            'is_read': false,
+          })
+          .select(_messageSelect)
+          .single();
+      return Right(_fromJson(data));
+    } on PostgrestException catch (e) {
+      return Left(Failure(e.message));
+    } on Exception {
+      return const Left(
+        Failure('Failed to send message. Please try again.'),
       );
-      _store.add(message);
-      return Right(message);
-    } on Exception catch (e) {
-      return Left(Failure(e.toString()));
     }
+  }
+
+  MessageEntity _fromJson(Map<String, dynamic> json) {
+    final sender = json['sender'] as Map<String, dynamic>?;
+
+    return MessageEntity(
+      id: json['id'] as String,
+      bookingId: json['booking_id'] as String,
+      senderId: json['sender_id'] as String,
+      senderName: sender?['full_name'] as String? ?? 'Unknown User',
+      content: json['content'] as String,
+      isRead: json['is_read'] as bool? ?? false,
+      createdAt: DateTime.parse(json['created_at'] as String),
+    );
   }
 }
