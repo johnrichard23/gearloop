@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -8,7 +9,9 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../listings/domain/entities/listing_entity.dart';
+import '../../data/repositories/bookings_repository_impl.dart';
 import '../../domain/usecases/calculate_booking_price.dart';
+import '../../domain/usecases/create_booking_request.dart';
 import '../providers/booking_request_provider.dart';
 
 class BookingRequestScreen extends ConsumerStatefulWidget {
@@ -24,6 +27,8 @@ class BookingRequestScreen extends ConsumerStatefulWidget {
 class _BookingRequestScreenState extends ConsumerState<BookingRequestScreen> {
   final _notesController = TextEditingController();
   final _priceCalculator = const CalculateBookingPrice();
+  final _createBookingRequest = CreateBookingRequest(BookingsRepositoryImpl());
+  bool _isSubmitting = false;
 
   @override
   void dispose() {
@@ -65,26 +70,55 @@ class _BookingRequestScreenState extends ConsumerState<BookingRequestScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final bookingState = ref.watch(bookingRequestProvider);
-    final notifier = ref.read(bookingRequestProvider.notifier);
-    final startDate = bookingState.startDate;
-    final endDate = bookingState.endDate;
-
-    BookingPriceCalculation? price;
-    if (startDate != null && endDate != null) {
-      price = _priceCalculator(
-        startDate: startDate,
-        endDate: endDate,
-        dailyRate: _parsePrice(widget.listing.pricePerDay),
-        depositAmount: _parsePrice(widget.listing.depositAmount),
+  Future<void> _submitRequest() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please log in to request a booking.'),
+          backgroundColor: AppColors.kColorError,
+        ),
       );
+      return;
     }
 
-    ref.listen<BookingRequestState>(bookingRequestProvider, (prev, next) async {
-      if (next.status == BookingRequestStatus.success) {
-        if (!mounted) return;
+    final startDate = ref.read(bookingRequestProvider).startDate;
+    final endDate = ref.read(bookingRequestProvider).endDate;
+    if (startDate == null || endDate == null) {
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+
+    final notes = _notesController.text.trim().isEmpty
+        ? null
+        : _notesController.text.trim();
+
+    final result = await _createBookingRequest(
+      listingId: widget.listing.id,
+      renterId: user.id,
+      hostId: widget.listing.hostId,
+      startDate: startDate,
+      endDate: endDate,
+      dailyRate: _parsePrice(widget.listing.pricePerDay),
+      depositAmount: _parsePrice(widget.listing.depositAmount),
+      notes: notes,
+    );
+
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+
+    result.fold(
+      (failure) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(failure.message),
+            backgroundColor: AppColors.kColorError,
+          ),
+        );
+      },
+      (_) async {
         await showDialog<void>(
           context: context,
           builder: (context) => AlertDialog(
@@ -104,7 +138,28 @@ class _BookingRequestScreenState extends ConsumerState<BookingRequestScreen> {
             ],
           ),
         );
-      } else if (next.status == BookingRequestStatus.error &&
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bookingState = ref.watch(bookingRequestProvider);
+    final startDate = bookingState.startDate;
+    final endDate = bookingState.endDate;
+
+    BookingPriceCalculation? price;
+    if (startDate != null && endDate != null) {
+      price = _priceCalculator(
+        startDate: startDate,
+        endDate: endDate,
+        dailyRate: _parsePrice(widget.listing.pricePerDay),
+        depositAmount: _parsePrice(widget.listing.depositAmount),
+      );
+    }
+
+    ref.listen<BookingRequestState>(bookingRequestProvider, (prev, next) async {
+      if (next.status == BookingRequestStatus.error &&
           next.errorMessage != null) {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
@@ -116,7 +171,7 @@ class _BookingRequestScreenState extends ConsumerState<BookingRequestScreen> {
       }
     });
 
-    final isLoading = bookingState.status == BookingRequestStatus.loading;
+    final isLoading = _isSubmitting;
     final canSubmit = startDate != null && endDate != null && !isLoading;
 
     return Scaffold(
@@ -181,14 +236,7 @@ class _BookingRequestScreenState extends ConsumerState<BookingRequestScreen> {
               child: AppButton(
                 label: 'Send Booking Request',
                 isLoading: isLoading,
-                onTap: canSubmit
-                    ? () => notifier.submitRequest(
-                          listing: widget.listing,
-                          notes: _notesController.text.trim().isEmpty
-                              ? null
-                              : _notesController.text.trim(),
-                        )
-                    : () {},
+                onTap: canSubmit ? _submitRequest : () {},
                 color: canSubmit
                     ? AppColors.kColorPrimary
                     : AppColors.kColorTextHint,

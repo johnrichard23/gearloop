@@ -51,7 +51,20 @@ class BookingModel extends BookingEntity {
     );
   }
 
-  factory BookingModel.fromJson(Map<String, dynamic> json) {
+  factory BookingModel.fromJson(
+    Map<String, dynamic> json, {
+    String? currentUserId,
+  }) {
+    final listing = json['gear_listings'] as Map<String, dynamic>?;
+    final host = json['host'] as Map<String, dynamic>?;
+    final renter = json['renter'] as Map<String, dynamic>?;
+    final counterparty = _resolveCounterparty(
+      json: json,
+      host: host,
+      renter: renter,
+      currentUserId: currentUserId,
+    );
+
     return BookingModel(
       id: json['id'] as String,
       listingId: json['listing_id'] as String,
@@ -72,12 +85,51 @@ class BookingModel extends BookingEntity {
       respondedAt: json['responded_at'] == null
           ? null
           : DateTime.parse(json['responded_at'] as String),
-      listingTitle: (json['listing_title'] as String?) ?? '',
-      listingCategory: (json['listing_category'] as String?) ?? '',
-      counterpartyName: (json['counterparty_name'] as String?) ?? '',
-      counterpartyVerified:
-          (json['counterparty_verified'] as bool?) ?? false,
+      listingTitle: listing?['title'] as String? ?? 'Unknown Listing',
+      listingCategory: listing?['category'] as String? ?? '',
+      counterpartyName: counterparty.$1,
+      counterpartyVerified: counterparty.$2,
     );
+  }
+
+  static (String, bool) _resolveCounterparty({
+    required Map<String, dynamic> json,
+    required Map<String, dynamic>? host,
+    required Map<String, dynamic>? renter,
+    required String? currentUserId,
+  }) {
+    final hostId = json['host_id'] as String?;
+    final renterId = json['renter_id'] as String?;
+
+    if (currentUserId != null &&
+        currentUserId == hostId &&
+        renter != null) {
+      return (
+        renter['full_name'] as String? ?? 'Unknown User',
+        renter['is_id_verified'] as bool? ?? false,
+      );
+    }
+    if (currentUserId != null &&
+        currentUserId == renterId &&
+        host != null) {
+      return (
+        host['full_name'] as String? ?? 'Unknown User',
+        host['is_id_verified'] as bool? ?? false,
+      );
+    }
+    if (host != null) {
+      return (
+        host['full_name'] as String? ?? 'Unknown User',
+        host['is_id_verified'] as bool? ?? false,
+      );
+    }
+    if (renter != null) {
+      return (
+        renter['full_name'] as String? ?? 'Unknown User',
+        renter['is_id_verified'] as bool? ?? false,
+      );
+    }
+    return ('Unknown User', false);
   }
 
   Map<String, dynamic> toJson() {
