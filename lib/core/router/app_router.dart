@@ -9,6 +9,7 @@ import '../../features/bookings/domain/entities/booking_entity.dart';
 import '../../features/listings/domain/entities/listing_entity.dart';
 import '../../features/listings/presentation/screens/create_listing_screen.dart';
 import '../../features/listings/presentation/screens/listing_detail_screen.dart';
+import '../../features/listings/presentation/screens/location_picker_screen.dart';
 import '../../features/bookings/presentation/screens/booking_request_screen.dart';
 import '../../features/bookings/presentation/screens/booking_detail_screen.dart';
 import '../../features/reviews/presentation/screens/write_review_screen.dart';
@@ -44,6 +45,16 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/create-listing',
       builder: (context, state) => const CreateListingScreen(),
+    ),
+    GoRoute(
+      path: '/location-picker',
+      builder: (context, state) {
+        final args = state.extra as Map<String, double>?;
+        return LocationPickerScreen(
+          initialLat: args?['lat'],
+          initialLng: args?['lng'],
+        );
+      },
     ),
     GoRoute(
       path: '/listing/:id',

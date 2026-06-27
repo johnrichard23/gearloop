@@ -37,4 +37,9 @@ abstract interface class BookingsRepository {
   Future<Either<Failure, List<DateTime>>> getBookedDatesForListing(
     String listingId,
   );
+
+  Future<Either<Failure, bool>> hasConfirmedBookingForListing({
+    required String listingId,
+    required String renterId,
+  });
 }

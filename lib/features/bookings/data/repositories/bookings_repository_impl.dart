@@ -221,6 +221,30 @@ class BookingsRepositoryImpl implements BookingsRepository {
     }
   }
 
+  @override
+  Future<Either<Failure, bool>> hasConfirmedBookingForListing({
+    required String listingId,
+    required String renterId,
+  }) async {
+    try {
+      final effectiveRenterId = _supabase.auth.currentUser?.id ?? renterId;
+      final data = await _supabase
+          .from('bookings')
+          .select('id')
+          .eq('listing_id', listingId)
+          .eq('renter_id', effectiveRenterId)
+          .inFilter('status', ['accepted', 'active', 'completed'])
+          .limit(1);
+      return Right((data as List).isNotEmpty);
+    } on PostgrestException catch (e) {
+      return Left(Failure(e.message));
+    } on Exception {
+      return Left(
+        const Failure('Failed to check booking status. Please try again.'),
+      );
+    }
+  }
+
   Future<Either<Failure, BookingEntity>> _updateStatus(
     String bookingId,
     String status, {
