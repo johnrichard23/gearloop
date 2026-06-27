@@ -1,12 +1,26 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+val envProperties = Properties()
+val envFile = rootProject.file("../.env")
+if (envFile.exists()) {
+    envFile.forEachLine { line ->
+        if (line.contains("=") && !line.startsWith("#")) {
+            val (key, value) = line.split("=", limit = 2)
+            envProperties[key.trim()] = value.trim()
+        }
+    }
+}
+
 android {
     namespace = "com.example.gearloop"
-    compileSdk = flutter.compileSdkVersion
+    compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -24,6 +38,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["GOOGLE_MAPS_API_KEY"] =
+            envProperties.getProperty("GOOGLE_MAPS_API_KEY", "")
     }
 
     buildTypes {

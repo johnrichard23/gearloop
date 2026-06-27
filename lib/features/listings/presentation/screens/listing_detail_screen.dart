@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../bookings/data/repositories/bookings_repository_impl.dart';
 import '../../domain/entities/listing_entity.dart';
 
 /// Gear listing detail (dummy pricing until booking flow exists).
@@ -115,26 +117,9 @@ class ListingDetailScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: AppSpacing.kSpacing16),
-                        Text(
-                          'Pickup Location',
-                          style: AppTextStyles.kTextHeading4,
-                        ),
-                        const SizedBox(height: AppSpacing.kSpacing8),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on,
-                              color: AppColors.kColorAccent,
-                              size: AppSpacing.kIconMedium,
-                            ),
-                            const SizedBox(width: AppSpacing.kSpacing8),
-                            Expanded(
-                              child: Text(
-                                listing.location,
-                                style: AppTextStyles.kTextBodyMedium,
-                              ),
-                            ),
-                          ],
+                        _PickupLocationSection(
+                          listing: listing,
+                          isOwnListing: isOwnListing,
                         ),
                         const SizedBox(height: AppSpacing.kSpacing16),
                       ],
@@ -164,6 +149,193 @@ class ListingDetailScreen extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+class _PickupLocationSection extends StatefulWidget {
+  const _PickupLocationSection({
+    required this.listing,
+    required this.isOwnListing,
+  });
+
+  final ListingEntity listing;
+  final bool isOwnListing;
+
+  @override
+  State<_PickupLocationSection> createState() => _PickupLocationSectionState();
+}
+
+class _PickupLocationSectionState extends State<_PickupLocationSection> {
+  final _bookingsRepository = BookingsRepositoryImpl();
+  bool _isLoading = true;
+  bool _hasConfirmedBooking = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBookingStatus();
+  }
+
+  Future<void> _loadBookingStatus() async {
+    if (widget.isOwnListing) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    final renterId = Supabase.instance.client.auth.currentUser?.id;
+    if (renterId == null) {
+      setState(() => _isLoading = false);
+      return;
+    }
+
+    final result = await _bookingsRepository.hasConfirmedBookingForListing(
+      listingId: widget.listing.id,
+      renterId: renterId,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    setState(() {
+      _hasConfirmedBooking = result.fold((_) => false, (value) => value);
+      _isLoading = false;
+    });
+  }
+
+  bool get _showExactLocation =>
+      widget.isOwnListing || _hasConfirmedBooking;
+
+  LatLng get _pickupLatLng =>
+      LatLng(widget.listing.lat, widget.listing.lng);
+
+  void _openFullscreenMap() {
+    showDialog<void>(
+      context: context,
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.all(AppSpacing.kSpacing16),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(AppSpacing.kRadiusLarge),
+          child: SizedBox(
+            height: MediaQuery.of(context).size.height * 0.7,
+            width: double.infinity,
+            child: GoogleMap(
+              initialCameraPosition: CameraPosition(
+                target: _pickupLatLng,
+                zoom: 16,
+              ),
+              mapType: MapType.normal,
+              markers: {
+                Marker(
+                  markerId: const MarkerId('pickup'),
+                  position: _pickupLatLng,
+                ),
+              },
+              zoomControlsEnabled: false,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Pickup Location',
+          style: AppTextStyles.kTextHeading4,
+        ),
+        const SizedBox(height: AppSpacing.kSpacing8),
+        Row(
+          children: [
+            const Icon(
+              Icons.location_on,
+              color: AppColors.kColorAccent,
+              size: AppSpacing.kIconMedium,
+            ),
+            const SizedBox(width: AppSpacing.kSpacing8),
+            Expanded(
+              child: Text(
+                widget.listing.location,
+                style: AppTextStyles.kTextBodyMedium,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.kSpacing8),
+        Text(
+          _showExactLocation
+              ? 'Exact pickup location'
+              : 'General area — exact location shown after '
+                  'booking is confirmed',
+          style: AppTextStyles.kTextBodySmall.copyWith(
+            color: AppColors.kColorTextSecondary,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.kSpacing8),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(AppSpacing.kRadiusLarge),
+          child: SizedBox(
+            height: 180,
+            width: double.infinity,
+            child: _isLoading
+                ? const ColoredBox(
+                    color: AppColors.kColorSurfaceVariant,
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                : _showExactLocation
+                    ? GoogleMap(
+                        initialCameraPosition: CameraPosition(
+                          target: _pickupLatLng,
+                          zoom: 15,
+                        ),
+                        mapType: MapType.normal,
+                        markers: {
+                          Marker(
+                            markerId: const MarkerId('pickup'),
+                            position: _pickupLatLng,
+                          ),
+                        },
+                        zoomControlsEnabled: false,
+                        onTap: (_) => _openFullscreenMap(),
+                      )
+                    : GoogleMap(
+                        initialCameraPosition: CameraPosition(
+                          target: _pickupLatLng,
+                          zoom: 13,
+                        ),
+                        mapType: MapType.normal,
+                        onMapCreated: (controller) {
+                          debugPrint(
+                            'GENERAL AREA MAP CREATED SUCCESSFULLY',
+                          );
+                          debugPrint(
+                            'CAMERA TARGET: lat=${_pickupLatLng.latitude}, lng=${_pickupLatLng.longitude}',
+                          );
+                        },
+                        circles: {
+                          Circle(
+                            circleId: const CircleId('pickup_area'),
+                            center: _pickupLatLng,
+                            radius: 800,
+                            fillColor: AppColors.kColorPrimary.withValues(
+                              alpha: 0.15,
+                            ),
+                            strokeColor: AppColors.kColorPrimary.withValues(
+                              alpha: 0.4,
+                            ),
+                            strokeWidth: 1,
+                          ),
+                        },
+                        zoomControlsEnabled: false,
+                      ),
+          ),
+        ),
+      ],
     );
   }
 }

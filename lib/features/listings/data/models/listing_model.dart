@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/listing_entity.dart';
@@ -102,21 +104,45 @@ class ListingModel extends ListingEntity {
   }
 
   static (double, double) _parseCoordinates(dynamic location) {
-    if (location is! Map<String, dynamic>) {
-      return (0.0, 0.0);
-    }
-    try {
-      final coords = location['coordinates'];
-      if (coords is List && coords.length >= 2) {
-        return (
-          (coords[1] as num).toDouble(),
-          (coords[0] as num).toDouble(),
-        );
+    if (location is Map<String, dynamic>) {
+      try {
+        final coords = location['coordinates'];
+        if (coords is List && coords.length >= 2) {
+          return (
+            (coords[1] as num).toDouble(),
+            (coords[0] as num).toDouble(),
+          );
+        }
+      } on Exception {
+        // Fall through to default.
       }
-    } on Exception {
-      // Fall through to default.
+    } else if (location is String && location.length >= 50) {
+      try {
+        // Skip the 18-character header
+        // (byte order + type + SRID), then read 16 hex chars for X
+        // (lng), then 16 hex chars for Y (lat)
+        final xHex = location.substring(18, 34);
+        final yHex = location.substring(34, 50);
+
+        final lng = _hexToDouble(xHex);
+        final lat = _hexToDouble(yHex);
+
+        return (lat, lng);
+      } on Exception {
+        // Fall through to default.
+      }
     }
     return (0.0, 0.0);
+  }
+
+  static double _hexToDouble(String hex) {
+    // Convert little-endian hex string to a double using ByteData
+    final bytes = <int>[];
+    for (var i = 0; i < hex.length; i += 2) {
+      bytes.add(int.parse(hex.substring(i, i + 2), radix: 16));
+    }
+    final byteData = ByteData.sublistView(Uint8List.fromList(bytes));
+    return byteData.getFloat64(0, Endian.little);
   }
 
   static String _formatPrice(dynamic value) {

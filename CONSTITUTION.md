@@ -299,5 +299,17 @@ flutter test --coverage
 
 ---
 
+## 12. Documentation Maintenance Protocol
+
+After completing any feature or fixing any significant bug, update these docs before considering the work fully done:
+
+- PROJECT_DOCUMENTATION.md → update the "Current Feature Status" table and "Known Gaps" section if either changed
+- DEVELOPMENT_JOURNEY.md and DEVELOPMENT_JOURNEY_INTERVIEW.md → add a new entry under "Specific Engineering Decisions I Can Defend" if the work involved a real bug, trade-off, or architectural decision worth being able to explain later
+- PRD.md → add to "What GearLoop is NOT building" if a feature was deliberately deferred rather than built
+
+When asked to build or fix something, after the implementation is verified working, proactively ask whether the relevant docs should be updated to reflect what changed, rather than waiting to be asked.
+
+---
+
 *Last updated: May 2026 | Version 1.0*
 *Treat this document as infrastructure. Update it intentionally, not casually.*

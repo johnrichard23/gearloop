@@ -2,9 +2,10 @@ import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
-
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
@@ -29,7 +30,6 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   final _descriptionController = TextEditingController();
   final _priceController = TextEditingController();
   final _depositController = TextEditingController();
-  final _locationController = TextEditingController();
   final _minDaysController = TextEditingController(text: '1');
 
   static const List<String> _categories = [
@@ -45,6 +45,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   ];
 
   String? _selectedCategory;
+  double? _selectedLat;
+  double? _selectedLng;
+  String? _locationLabel;
   final List<_PickedPhoto> _pickedPhotos = [];
   final ImagePicker _imagePicker = ImagePicker();
 
@@ -56,7 +59,6 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     _descriptionController.dispose();
     _priceController.dispose();
     _depositController.dispose();
-    _locationController.dispose();
     _minDaysController.dispose();
     super.dispose();
   }
@@ -71,15 +73,20 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       );
       return;
     }
+    if (_selectedLat == null || _selectedLng == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please set a pickup location')),
+      );
+      return;
+    }
 
-    // TODO: Replace with real map picker for precise location selection
     final listing = ListingEntity(
       id: '',
       hostId: '',
       title: _titleController.text.trim(),
       category: _selectedCategory!,
       pricePerDay: _formatPeso(_priceController.text.trim()),
-      location: _locationController.text.trim(),
+      location: _locationLabel ?? 'Selected location',
       hostName: 'You',
       rating: 0,
       isVerified: false,
@@ -89,8 +96,8 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
       minRentalDays: _minDaysController.text.trim(),
       isActive: true,
       isPaused: false,
-      lat: 12.9734,
-      lng: 124.0067,
+      lat: _selectedLat!,
+      lng: _selectedLng!,
     );
 
     ref.read(createListingProvider.notifier).submitListing(
@@ -122,6 +129,54 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
     setState(() => _pickedPhotos.removeAt(index));
   }
 
+  Future<void> _pickLocation() async {
+    final result = await context.push<LatLng>('/location-picker');
+    if (result == null) {
+      return;
+    }
+
+    setState(() {
+      _selectedLat = result.latitude;
+      _selectedLng = result.longitude;
+    });
+    await _reverseGeocodeForLabel(result.latitude, result.longitude);
+  }
+
+  Future<void> _reverseGeocodeForLabel(double lat, double lng) async {
+    try {
+      final placemarks = await placemarkFromCoordinates(lat, lng);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _locationLabel = placemarks.isNotEmpty
+            ? _formatPlacemark(placemarks.first)
+            : 'Selected location';
+      });
+    } on Exception {
+      if (!mounted) {
+        return;
+      }
+      setState(() => _locationLabel = 'Selected location');
+    }
+  }
+
+  String _formatPlacemark(Placemark placemark) {
+    final parts = <String>[
+      if (placemark.locality != null && placemark.locality!.isNotEmpty)
+        placemark.locality!,
+      if (placemark.administrativeArea != null &&
+          placemark.administrativeArea!.isNotEmpty)
+        placemark.administrativeArea!,
+    ];
+    if (parts.isEmpty &&
+        placemark.subAdministrativeArea != null &&
+        placemark.subAdministrativeArea!.isNotEmpty) {
+      parts.add(placemark.subAdministrativeArea!);
+    }
+    return parts.isEmpty ? 'Selected location' : parts.join(', ');
+  }
+
   String _formatPeso(String value) {
     if (value.isEmpty) {
       return value;
@@ -132,6 +187,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   @override
   Widget build(BuildContext context) {
     final createState = ref.watch(createListingProvider);
+    final hasLocation = _selectedLat != null && _selectedLng != null;
+    final canSubmit =
+        hasLocation && createState.status != CreateListingStatus.loading;
 
     ref.listen<CreateListingState>(createListingProvider, (previous, next) {
       if (next.status == CreateListingStatus.success) {
@@ -331,18 +389,9 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                         style: AppTextStyles.kTextHeading4,
                       ),
                       const SizedBox(height: AppSpacing.kSpacing12),
-                      AppTextField(
-                        label: 'Location label',
-                        controller: _locationController,
-                        hint: 'e.g. Legazpi City, Albay',
-                        validator: _validateRequired,
-                      ),
-                      const SizedBox(height: AppSpacing.kSpacing8),
-                      Text(
-                        'Exact coordinates will be set automatically in a future update.',
-                        style: AppTextStyles.kTextCaption.copyWith(
-                          color: AppColors.kColorTextHint,
-                        ),
+                      _LocationPickerField(
+                        label: _locationLabel,
+                        onTap: _pickLocation,
                       ),
                       const SizedBox(height: AppSpacing.kSpacing24),
                       Text(
@@ -368,7 +417,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
                 label: 'Post Gear',
                 isLoading:
                     createState.status == CreateListingStatus.loading,
-                onTap: _onSubmit,
+                onTap: canSubmit ? _onSubmit : () {},
+                color: canSubmit
+                    ? AppColors.kColorPrimary
+                    : AppColors.kColorTextHint,
               ),
             ),
           ],
@@ -393,6 +445,58 @@ class _PickedPhoto {
 
   final XFile file;
   final Uint8List bytes;
+}
+
+class _LocationPickerField extends StatelessWidget {
+  const _LocationPickerField({
+    required this.label,
+    required this.onTap,
+  });
+
+  final String? label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasLabel = label != null && label!.isNotEmpty;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppSpacing.kRadiusMedium),
+      child: InputDecorator(
+        decoration: InputDecoration(
+          labelText: 'Pickup location',
+          labelStyle: AppTextStyles.kTextLabel,
+          filled: true,
+          fillColor: AppColors.kColorSurfaceVariant,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.kRadiusMedium),
+            borderSide: const BorderSide(color: AppColors.kColorBorder),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppSpacing.kRadiusMedium),
+            borderSide: const BorderSide(color: AppColors.kColorBorder),
+          ),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.kSpacing16,
+            vertical: AppSpacing.kSpacing12,
+          ),
+          prefixIcon: const Icon(
+            Icons.location_on_outlined,
+            color: AppColors.kColorPrimary,
+          ),
+        ),
+        child: Text(
+          hasLabel ? label! : 'Tap to set pickup location',
+          style: AppTextStyles.kTextBodyLarge.copyWith(
+            color: hasLabel
+                ? AppColors.kColorTextPrimary
+                : AppColors.kColorTextHint,
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 /// Multiline field matching [AppTextField] styling (maxLines not on AppTextField yet).
