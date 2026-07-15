@@ -91,6 +91,30 @@ A marketplace where gear owners (hosts) list underutilized equipment — cameras
 - All colors must use `AppColors` — no hardcoded hex values
 - All spacing must use `AppSpacing` constants
 
+### Container Color/Decoration Rule
+Never set both `color` and `decoration` on the same Container simultaneously — Flutter throws a hard assertion error since `color` is shorthand for `decoration: BoxDecoration(color: ...)`. Put the color INSIDE the BoxDecoration whenever other decoration properties (border, borderRadius, boxShadow, gradient) are also needed:
+
+```dart
+decoration: BoxDecoration(
+  color: kColorSurface,
+  borderRadius: ...,
+)
+```
+
+Additionally: `clipBehavior` (other than the default `Clip.none`) REQUIRES a `decoration` to be present — Flutter has nothing to clip against otherwise. If a Container needs `clipBehavior: Clip.antiAlias` (e.g., to round corners on a child), it must always have a `decoration` set too, even if that decoration is just a plain color:
+
+```dart
+Container(
+  decoration: const BoxDecoration(
+    color: Colors.white,
+  ),
+  clipBehavior: Clip.antiAlias,
+  child: ...,
+)
+```
+
+Never set clipBehavior without an accompanying decoration.
+
 ### Dart Rules
 - Null safety is mandatory — no `!` force-unwrap without a comment explaining why
 - Prefer `final` over `var` always
