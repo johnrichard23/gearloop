@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
@@ -12,6 +13,8 @@ import '../../../../core/widgets/loading_skeleton.dart';
 import '../../domain/entities/listing_entity.dart';
 import '../providers/listings_provider.dart';
 import '../widgets/listing_card.dart';
+
+enum _BrowseViewMode { list, map }
 
 /// Browse gear listings from Supabase.
 class BrowseScreen extends ConsumerStatefulWidget {
@@ -36,6 +39,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
   ];
 
   String _selectedCategory = 'All';
+  _BrowseViewMode _viewMode = _BrowseViewMode.list;
 
   List<ListingEntity> _filterByCategory(List<ListingEntity> listings) {
     if (_selectedCategory == 'All') {
@@ -119,24 +123,88 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
               ),
             ),
             const SizedBox(height: AppSpacing.kSpacing12),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.kSpacing16,
+              ),
+              child: SizedBox(
+                height: 40,
+                child: SegmentedButton<String>(
+                  showSelectedIcon: false,
+                  segments: const [
+                    ButtonSegment(
+                      value: 'list',
+                      label: Text('List'),
+                      icon: Icon(Icons.list, size: 16),
+                    ),
+                    ButtonSegment(
+                      value: 'map',
+                      label: Text('Map'),
+                      icon: Icon(Icons.map_outlined, size: 16),
+                    ),
+                  ],
+                  selected: {_viewMode == _BrowseViewMode.list ? 'list' : 'map'},
+                  onSelectionChanged: (value) {
+                    setState(() {
+                      _viewMode = value.first == 'list'
+                          ? _BrowseViewMode.list
+                          : _BrowseViewMode.map;
+                    });
+                  },
+                  expandedInsets: EdgeInsets.zero,
+                  style: ButtonStyle(
+                    backgroundColor: WidgetStateProperty.resolveWith(
+                      (states) => states.contains(WidgetState.selected)
+                          ? AppColors.kColorPrimary
+                          : AppColors.kColorSurfaceVariant,
+                    ),
+                    foregroundColor: WidgetStateProperty.resolveWith(
+                      (states) => states.contains(WidgetState.selected)
+                          ? Colors.white
+                          : AppColors.kColorTextSecondary,
+                    ),
+                    iconColor: WidgetStateProperty.resolveWith(
+                      (states) => states.contains(WidgetState.selected)
+                          ? Colors.white
+                          : AppColors.kColorTextSecondary,
+                    ),
+                    side: WidgetStateProperty.all(BorderSide.none),
+                    shape: WidgetStateProperty.all(
+                      RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.kRadiusMedium,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.kSpacing12),
             Expanded(
               child: listingsAsync.when(
-                loading: () => GridView.builder(
-                  padding: const EdgeInsets.all(AppSpacing.kSpacing16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: AppSpacing.kSpacing12,
-                    mainAxisSpacing: AppSpacing.kSpacing12,
-                    childAspectRatio: 0.58,
-                  ),
-                  itemCount: 6,
-                  itemBuilder: (context, index) {
-                    return const LoadingSkeleton(
-                      width: double.infinity,
-                      height: double.infinity,
-                    );
-                  },
-                ),
+                loading: () {
+                  if (_viewMode == _BrowseViewMode.map) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                  return GridView.builder(
+                    padding: const EdgeInsets.all(AppSpacing.kSpacing16),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 2,
+                      crossAxisSpacing: AppSpacing.kSpacing12,
+                      mainAxisSpacing: AppSpacing.kSpacing12,
+                      mainAxisExtent: 290,
+                    ),
+                    itemCount: 6,
+                    itemBuilder: (context, index) {
+                      return const LoadingSkeleton(
+                        width: double.infinity,
+                        height: double.infinity,
+                      );
+                    },
+                  );
+                },
                 error: (error, _) => ErrorStateWidget(
                   message: error is Failure
                       ? error.message
@@ -146,6 +214,9 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                 data: (allListings) {
                   final listings = _filterByCategory(allListings);
                   if (listings.isEmpty) {
+                    if (_viewMode == _BrowseViewMode.map) {
+                      return _BrowseMapView(listings: listings);
+                    }
                     return EmptyStateWidget(
                       title: 'No gear listed yet',
                       subtitle: _selectedCategory == 'All'
@@ -158,6 +229,9 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                       ),
                     );
                   }
+                  if (_viewMode == _BrowseViewMode.map) {
+                    return _BrowseMapView(listings: listings);
+                  }
                   return GridView.builder(
                     padding: const EdgeInsets.all(AppSpacing.kSpacing16),
                     gridDelegate:
@@ -165,7 +239,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                       crossAxisCount: 2,
                       crossAxisSpacing: AppSpacing.kSpacing12,
                       mainAxisSpacing: AppSpacing.kSpacing12,
-                      childAspectRatio: 0.58,
+                      mainAxisExtent: 290,
                     ),
                     itemCount: listings.length,
                     itemBuilder: (context, index) {
@@ -185,6 +259,77 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
           ],
         ),
       ),
+    );
+  }
+
+}
+
+class _BrowseMapView extends StatelessWidget {
+  const _BrowseMapView({required this.listings});
+
+  final List<ListingEntity> listings;
+
+  static const LatLng _sorsogonCity = LatLng(12.9734, 124.0067);
+
+  static bool _hasValidLocation(ListingEntity listing) {
+    return !(listing.lat == 0.0 && listing.lng == 0.0);
+  }
+
+  LatLng _mapCenter() {
+    final validListings =
+        listings.where(_hasValidLocation).toList();
+    if (validListings.isEmpty) {
+      return _sorsogonCity;
+    }
+
+    final latSum = validListings.fold<double>(
+      0,
+      (sum, listing) => sum + listing.lat,
+    );
+    final lngSum = validListings.fold<double>(
+      0,
+      (sum, listing) => sum + listing.lng,
+    );
+    return LatLng(
+      latSum / validListings.length,
+      lngSum / validListings.length,
+    );
+  }
+
+  Set<Marker> _buildMarkers(BuildContext context) {
+    return listings.where(_hasValidLocation).map((listing) {
+      return Marker(
+        markerId: MarkerId(listing.id),
+        position: LatLng(listing.lat, listing.lng),
+        infoWindow: InfoWindow(
+          title: listing.title,
+          snippet: '${listing.pricePerDay}/day',
+          onTap: () => context.push(
+            '/listing/${listing.id}',
+            extra: listing,
+          ),
+        ),
+      );
+    }).toSet();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final center = _mapCenter();
+    final markers = _buildMarkers(context);
+
+    return GoogleMap(
+      key: ValueKey(
+        '${center.latitude}_${center.longitude}_${markers.length}',
+      ),
+      initialCameraPosition: CameraPosition(
+        target: center,
+        zoom: 12,
+      ),
+      mapType: MapType.normal,
+      markers: markers,
+      zoomControlsEnabled: false,
+      myLocationButtonEnabled: false,
     );
   }
 }
