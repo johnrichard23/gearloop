@@ -2,20 +2,38 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-/// Rentra design tokens — typography (Theme 2: Ocean & Coral).
+/// Rentra design tokens — typography (teal palette).
 abstract final class AppTextStyles {
   AppTextStyles._();
 
+  /// Bricolage Grotesque (variable: weight, width and optical size axes).
+  /// Used for display text and the two largest headings only.
+  static const String kFontHeadline = 'BricolageGrotesque';
+
   // Headings — kColorTextPrimary
+  static const TextStyle kTextDisplay = TextStyle(
+    fontFamily: kFontHeadline,
+    fontSize: 36, // Onboarding and launch headlines
+    fontWeight: FontWeight.w800,
+    fontVariations: [FontVariation('wght', 800), FontVariation('opsz', 36)],
+    height: 1.1,
+    letterSpacing: -0.5,
+    color: AppColors.kColorTextPrimary,
+  );
+
   static const TextStyle kTextHeading1 = TextStyle(
+    fontFamily: kFontHeadline,
     fontSize: 28, // Screen titles, hero gear names
     fontWeight: FontWeight.w700,
+    fontVariations: [FontVariation('wght', 700), FontVariation('opsz', 28)],
     color: AppColors.kColorTextPrimary,
   );
 
   static const TextStyle kTextHeading2 = TextStyle(
+    fontFamily: kFontHeadline,
     fontSize: 22, // Section headers, listing detail titles
     fontWeight: FontWeight.w700,
+    fontVariations: [FontVariation('wght', 700), FontVariation('opsz', 22)],
     color: AppColors.kColorTextPrimary,
   );
 
@@ -69,16 +87,16 @@ abstract final class AppTextStyles {
     color: AppColors.kColorTextPrimary,
   );
 
-  // Price — kColorAccent
+  // Price — kColorPrimary (accent is too low-contrast for text)
   static const TextStyle kTextPrice = TextStyle(
     fontSize: 20, // Daily rate on listing detail
     fontWeight: FontWeight.w700,
-    color: AppColors.kColorAccent,
+    color: AppColors.kColorPrimary,
   );
 
   static const TextStyle kTextPriceSmall = TextStyle(
     fontSize: 14, // Price on listing cards and booking rows
     fontWeight: FontWeight.w600,
-    color: AppColors.kColorAccent,
+    color: AppColors.kColorPrimary,
   );
 }

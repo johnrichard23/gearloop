@@ -332,7 +332,7 @@ class HomeScreen extends ConsumerWidget {
                                 child: Text(
                                   'List your gear',
                                   style: AppTextStyles.kTextButton.copyWith(
-                                    color: Colors.white,
+                                    color: AppColors.kColorOnAccent,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -722,7 +722,7 @@ class HomeScreen extends ConsumerWidget {
                             ),
                             child: const Icon(
                               Icons.add,
-                              color: Colors.white,
+                              color: AppColors.kColorOnAccent,
                               size: 19,
                             ),
                           ),

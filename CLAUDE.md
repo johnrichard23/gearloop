@@ -81,16 +81,16 @@ Router).
 - Sealed classes for result types (Success/Failure).
 - Async functions must handle errors explicitly — no silent catches, no bare `dynamic`.
 
-**Official palette (Theme 2: Ocean & Coral)** — must be wired through `AppColors`, never
+**Official palette (teal)** — must be wired through `AppColors`, never
 inlined:
 | Token | Hex | Use |
 |---|---|---|
-| Primary | `#1A5FA8` | Ocean Blue |
-| Accent | `#E8523A` | Coral |
-| Background | `#FFF9F8` | Cool warm white |
+| Primary | `#1F6F63` | Teal |
+| Accent | `#6FA897` | Sage (fills/icons only, not text on white) |
+| Background | `#F7FAF9` | Soft mint white |
 | Text | `#1A1A2E` | Near black |
-| Success | `#1B6B45` | Forest green |
-| Warning | `#F5A623` | Amber |
+| Success | `#16A34A` | Green |
+| Warning | `#D97706` | Amber |
 | Error | `#C0392B` | Red |
 
 **Database (Supabase/Postgres)**

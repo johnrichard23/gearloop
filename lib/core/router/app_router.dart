@@ -5,6 +5,8 @@ import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/home/presentation/screens/main_shell_screen.dart';
+import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
+import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/bookings/domain/entities/booking_entity.dart';
 import '../../features/listings/domain/entities/listing_entity.dart';
 import '../../features/listings/presentation/screens/create_listing_screen.dart';
@@ -20,11 +22,19 @@ import '../../features/notifications/presentation/screens/notification_center_sc
 
 /// App-wide route definitions. Use with [MaterialApp.router] via [appRouter].
 final GoRouter appRouter = GoRouter(
-  initialLocation: '/login',
+  initialLocation: '/splash',
   routes: [
     GoRoute(
       path: '/',
-      redirect: (context, state) => '/login',
+      redirect: (context, state) => '/splash',
+    ),
+    GoRoute(
+      path: '/splash',
+      builder: (context, state) => const SplashScreen(),
+    ),
+    GoRoute(
+      path: '/onboarding',
+      builder: (context, state) => const OnboardingScreen(),
     ),
     GoRoute(
       path: '/login',
