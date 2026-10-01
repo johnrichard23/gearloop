@@ -3,8 +3,8 @@
 Source of truth for look and feel is the Figma `Design System` page. Dart constants live in
 `lib/core/constants/`. Naming: Figma `color/primary` ↔ Dart `AppColors.kColorPrimary`.
 
-> **Palette status:** Figma uses the teal palette below. `app_colors.dart` still holds the earlier
-> Ocean & Coral values until it is updated. Names match; hex values do not yet.
+> **Palette status:** `app_colors.dart` was moved to the teal palette below on 2026-10-01. Names
+> and hex values match Figma.
 
 ## Colors (collection: Rentra Colors)
 
@@ -27,7 +27,7 @@ Source of truth for look and feel is the Figma `Design System` page. Dart consta
 | `color/border` | `#E5E7EB` | `kColorBorder` | Default borders |
 | `color/border-strong` | `#D1D5DB` | `kColorBorderDark` | Emphasized borders, disabled outline |
 
-**In Figma only (add to `AppColors` when implementing):**
+**On-colors and aliases** (`kColorOnPrimary` and `kColorOnAccent` are in `AppColors`; the two aliases are added with the Toast and Skeleton widgets):
 
 | Figma variable | Value | Use |
 |---|---|---|

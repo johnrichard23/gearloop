@@ -54,13 +54,13 @@ A marketplace where gear owners (hosts) list underutilized equipment — cameras
 
 ## 3. Flutter Code Standards
 
-### Official Color Palette — Theme 2: Ocean & Coral
-- Primary:    #1A5FA8 (Ocean Blue)
-- Accent:     #E8523A (Coral)
-- Background: #FFF9F8 (Cool warm white)
+### Official Color Palette — Teal
+- Primary:    #1F6F63 (Teal)
+- Accent:     #6FA897 (Sage — fills and icons only, not text on white)
+- Background: #F7FAF9 (Soft mint white)
 - Text:       #1A1A2E (Near black)
-- Success:    #1B6B45 (Forest green)
-- Warning:    #F5A623 (Amber)
+- Success:    #16A34A (Green)
+- Warning:    #D97706 (Amber)
 - Error:      #C0392B (Red)
 
 ### Architecture
@@ -353,7 +353,7 @@ screens look and behave; they extend (never replace) the token rules in §3.
   with a regular and an emphasized weight) and the spacing scale. Do not invent one-off sizes.
 - Pick **one** corner radius per element family and reuse it: inputs and buttons share a radius;
   cards share a larger radius; pills/avatars use the circular radius.
-- Color carries meaning, not decoration: Primary for brand and navigation, Accent (Coral) for the
+- Color carries meaning, not decoration: Primary for brand and navigation, Accent (Sage) for the
   one main action per screen, Error only for destructive/failed states, Success/Warning for
   status. Never use Accent for two competing actions on one screen.
 - When a design tint has no matching token, add a named token to `AppColors` — do not inline a hex.

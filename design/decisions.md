@@ -5,8 +5,9 @@ One entry per decision: what, why, and when. Newest first.
 ## 2026-10-01 — Teal palette replaces Ocean & Coral
 - **Decision:** Brand palette is teal (`#1F6F63` primary) with a sage accent (`#6FA897`).
 - **Why:** The earlier ocean-blue primary looked too close to a well-known social network's blue.
-- **Consequences:** `app_colors.dart`, `CLAUDE.md` and `CONSTITUTION.md` still list the old
-  palette and are updated later; Figma is the current reference. Hex values differ, names match.
+- **Consequences:** `app_colors.dart`, `CLAUDE.md` and `CONSTITUTION.md` were updated to the
+  teal palette the same day; Figma and code now match. Price text styles use primary, and text on
+  an accent fill uses `kColorOnAccent`.
 
 ## 2026-10-01 — Prices use primary, not accent
 - **Decision:** Price text uses `color/primary`.
