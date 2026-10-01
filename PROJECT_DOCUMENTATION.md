@@ -1,4 +1,4 @@
-# GearLoop — Project Documentation
+# Rentra — Project Documentation
 > Version 1.0 | July 2026
 > Tracks current feature status and known gaps. Updated per the Documentation Maintenance
 > Protocol in CONSTITUTION.md §12 after each feature or significant bug fix.

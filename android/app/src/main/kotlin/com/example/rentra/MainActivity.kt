@@ -1,4 +1,4 @@
-package com.example.gearloop
+package com.example.rentra
 
 import io.flutter.embedding.android.FlutterActivity
 

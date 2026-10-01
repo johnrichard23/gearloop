@@ -1,6 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// GearLoop Supabase singleton: one-time initialization and global client access.
+/// Rentra Supabase singleton: one-time initialization and global client access.
 ///
 /// Secrets must come from compile-time defines (see CONSTITUTION.md), for example:
 /// `flutter run --dart-define=SUPABASE_URL=https://xxx.supabase.co --dart-define=SUPABASE_ANON_KEY=eyJ...`

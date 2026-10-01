@@ -1,4 +1,4 @@
-# GearLoop — Constitution
+# Rentra — Constitution
 > The master doctrine governing all AI-assisted development in this project.
 > Every Cursor interaction must operate within these rules.
 
@@ -6,17 +6,17 @@
 
 ## 1. Project Identity
 
-**App Name:** GearLoop
+**App Name:** Rentra
 **Tagline:** Rent gear. Share value.
 **Platform:** Cross-platform mobile app (iOS + Android) via Flutter + Web dashboard via Next.js
 **Market:** Philippines — Bicol/Sorsogon region first, then SEA
 **Category:** Peer-to-peer equipment rental marketplace
 **Business Model:** 10–15% commission per booking + optional damage insurance upsell
 
-**What GearLoop is:**
+**What Rentra is:**
 A marketplace where gear owners (hosts) list underutilized equipment — cameras, drones, lenses, camping gear, musical instruments, sports equipment — and renters book them by the day with damage protection built in.
 
-**What GearLoop is NOT:**
+**What Rentra is NOT:**
 - A property rental platform
 - A skills or services platform
 - A social media app
@@ -329,11 +329,118 @@ After completing any feature or fixing any significant bug, update these docs be
 
 - PROJECT_DOCUMENTATION.md → update the "Current Feature Status" table and "Known Gaps" section if either changed
 - DEVELOPMENT_JOURNEY.md and DEVELOPMENT_JOURNEY_INTERVIEW.md → add a new entry under "Specific Engineering Decisions I Can Defend" if the work involved a real bug, trade-off, or architectural decision worth being able to explain later
-- PRD.md → add to "What GearLoop is NOT building" if a feature was deliberately deferred rather than built
+- PRD.md → add to "What Rentra is NOT building" if a feature was deliberately deferred rather than built
+- PRD.md → "Screen Inventory & Design Tracker": mark **Figma** ✅ when a screen is designed and **Code** ✅ when it is built
+- design/ → keep in step with UI work:
+  - `tokens.md` when a color, type, spacing or radius token is added or changed (Figma name ↔ Dart name)
+  - `components.md` when a shared component is added, changed or implemented in Flutter
+  - `screens/phase-N-*.md` when a screen is designed (use the template in `design/README.md`)
+  - `flows/` when a multi-screen flow is defined or changed
+  - `decisions.md` when a UI/UX decision is made, with the reason
 
 When asked to build or fix something, after the implementation is verified working, proactively ask whether the relevant docs should be updated to reflect what changed, rather than waiting to be asked.
 
 ---
 
-*Last updated: May 2026 | Version 1.0*
+## 13. UI/UX Principles
+
+Product feel to protect: **warmth, confidence, simplicity**. These principles govern how
+screens look and behave; they extend (never replace) the token rules in §3.
+
+### 13.1 Design tokens are the single source of truth
+- Colors → `AppColors`, type → `AppTextStyles`, spacing/radius/icons → `AppSpacing`. No literals.
+- Use one shared scale per concern: a fixed type ramp (display → title → body → caption, each
+  with a regular and an emphasized weight) and the spacing scale. Do not invent one-off sizes.
+- Pick **one** corner radius per element family and reuse it: inputs and buttons share a radius;
+  cards share a larger radius; pills/avatars use the circular radius.
+- Color carries meaning, not decoration: Primary for brand and navigation, Accent (Coral) for the
+  one main action per screen, Error only for destructive/failed states, Success/Warning for
+  status. Never use Accent for two competing actions on one screen.
+- When a design tint has no matching token, add a named token to `AppColors` — do not inline a hex.
+
+### 13.2 One component per job — extend, don't fork
+- Reach for a shared widget in `core/widgets/` before building a raw control. Add a variant
+  parameter to the shared widget rather than copying it into a feature.
+- Buttons come in a small fixed set of roles: **primary** (one per screen), **secondary/outlined**,
+  **text**, **destructive**. The role picks the colors; call sites rarely override them.
+- A disabled or loading button automatically renders its muted style and blocks re-taps
+  (prevents double-submit on booking and payment actions).
+- Shared widgets to maintain: button, text field, empty state, error state, skeleton, toast,
+  inline info banner, confirmation dialog, modal/sheet header, remote image.
+
+### 13.3 Every screen has four states
+Loading, content, empty, error — all designed, none left blank.
+- **Loading:** skeleton placeholders shaped like the final content (with a subtle shimmer), not a
+  centered spinner, for lists and detail pages. Spinners only inside buttons or brief inline actions.
+- **Empty:** a friendly title, one sentence explaining why, and a single next-step action
+  ("Browse gear", "List your first item"). Never a bare "No data".
+- **Error:** plain-language message plus **Retry**. Offline is its own state: say the connection
+  is the problem, offer Retry and a shortcut to device settings. Never show raw exception text.
+- **Refresh:** any list backed by remote data supports pull-to-refresh.
+
+### 13.4 Forms
+- Every field has a persistent visible **label** above it (not placeholder-only) plus a hint
+  placeholder.
+- Field states are visually distinct: idle, focused (stronger border), error (error border + message
+  directly under the field), read-only/locked (muted fill).
+- Validate on blur/submit, not on every keystroke; show the error at the field, not in a dialog.
+- Set the right keyboard type, autofill hint, and capitalization per field; password fields get
+  a show/hide toggle; the keyboard dismisses on scroll or tap outside.
+- The primary action stays reachable above the keyboard (pin it in a bottom inset that adjusts
+  to the keyboard) and is disabled until the form is valid.
+
+### 13.5 Feedback and messaging
+- **Toast/snackbar** for lightweight confirmations ("Listing saved"): one shared widget, auto
+  dismisses in ~3 seconds, replaces the previous one, and can be dismissed by swipe or close.
+- **Inline banner** for persistent context on a screen (deposit rules, cancellation terms), tinted
+  by meaning (info/warning/error) with an icon — never color alone.
+- **Dialog** only for decisions that need a choice or are irreversible (cancel booking, delete
+  listing). Destructive option uses the destructive style and is never the default focus.
+- Success confirmations for high-stakes flows (booking sent, payment done) get a dedicated
+  confirmation screen with the next step, not just a toast.
+
+### 13.6 Navigation and layout
+- Bottom navigation for the 4–5 top-level destinations; deeper flows push onto the stack with a
+  consistent back affordance. Modal sheets use a close button and a titled header.
+- Multi-step flows (create listing, checkout) show progress, keep entered data when going back,
+  and confirm before discarding.
+- Screen padding follows `kSpacing16`/`kSpacing20` horizontally; sections separate with
+  `kSpacing24`+. Content stays inside safe areas and scrolls rather than clipping on small phones.
+- Primary call-to-action on detail pages (e.g. "Request to book" with the price) is pinned at the
+  bottom, not buried in the scroll.
+- Content hierarchy: one clear title, secondary info in muted text, price and key facts scannable
+  at a glance. Use badges/tags for category and status.
+
+### 13.7 Media
+- Remote images go through one shared image widget with a placeholder, error fallback, and
+  fade-in — no raw `Image.network` in screens.
+- Listing photos use a swipeable carousel with a page indicator and tap-to-zoom.
+- Avatars fall back to initials when there is no photo.
+
+### 13.8 Accessibility and touch
+- Minimum tap target 48×48; interactive icons get a `Semantics` label / tooltip.
+- Text scales with the system font size; layouts must not overflow at large text.
+- Contrast: body text ≥ 4.5:1 against its background; never rely on color alone for status.
+- Respect the platform's back gesture; do not trap the user in a flow.
+- Light haptic feedback on key confirmations (booking sent, review submitted) is welcome but
+  optional; never on every tap.
+
+### 13.9 Copy and tone
+- Friendly, plain, second person ("Your booking request was sent"). No jargon, no blame in errors
+  ("We couldn't load your bookings. Try again.").
+- Buttons say what they do ("Request to book", "Save changes"), not "OK" or "Submit".
+- Prices always use the shared currency formatter (₱, no decimals unless needed).
+- All user-facing strings live in `AppStrings`.
+
+### 13.10 UI Definition of Done (adds to §10)
+- [ ] Loading skeleton, empty, error, and offline states implemented
+- [ ] Lists have pull-to-refresh where data is remote
+- [ ] Forms show labels, field-level errors, and a keyboard-safe primary action
+- [ ] Only shared widgets used for buttons, fields, empty/error states, toasts
+- [ ] Tap targets ≥ 48px and interactive icons have semantic labels
+- [ ] Layout checked on a small phone and at large text size
+
+---
+
+*Last updated: September 2026 | Version 1.1*
 *Treat this document as infrastructure. Update it intentionally, not casually.*

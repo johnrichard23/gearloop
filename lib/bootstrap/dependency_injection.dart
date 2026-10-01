@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import 'package:gearloop/core/network/supabase_client.dart';
+import 'package:rentra/core/network/supabase_client.dart';
 
 /// Shared Supabase client for datasources (read via Riverpod, not from widgets directly).
 ///

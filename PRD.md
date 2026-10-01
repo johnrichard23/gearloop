@@ -1,6 +1,6 @@
-# GearLoop — Product Requirements Document (PRD)
+# Rentra — Product Requirements Document (PRD)
 > Version 1.0 | May 2026
-> This document describes what GearLoop is, what it does, and why each piece matters.
+> This document describes what Rentra is, what it does, and why each piece matters.
 > This is the north star. When a feature decision gets confusing during development,
 > come back here and ask: does this serve the renter's trust, the host's confidence,
 > or the simplicity of the exchange? If yes — build it. If no — cut it.
@@ -29,7 +29,7 @@ expect to get it back in good condition.
 
 ## The Solution
 
-GearLoop is a **community marketplace for gear rental** — a platform where anyone can
+Rentra is a **community marketplace for gear rental** — a platform where anyone can
 list equipment they own for others to rent, and anyone can find and borrow the gear
 they need, nearby, for the exact days they need it.
 
@@ -65,7 +65,7 @@ from someone nearby, with the confidence that the transaction is protected.
 
 ### Both Can Be the Same Person
 
-GearLoop is designed so that anyone can be both a host and a renter. The photographer
+Rentra is designed so that anyone can be both a host and a renter. The photographer
 who rents out their old lens on weekends might also rent a drone from someone else for
 a project. This dual participation is what builds a healthy marketplace community.
 
@@ -78,13 +78,13 @@ a project. This dual participation is what builds a healthy marketplace communit
 ### 1. Gear Discovery
 
 **What it does:**
-When someone opens GearLoop, they see available gear around them — organized by
+When someone opens Rentra, they see available gear around them — organized by
 category, sortable by distance and price, filterable by availability dates. They can
 search for specific items by name. They can browse by category. Every listing shows
 photos, a daily price, the host's rating, and how far away the gear is.
 
 **Why it matters:**
-The entire value of GearLoop starts here. If renters can't quickly find what they need,
+The entire value of Rentra starts here. If renters can't quickly find what they need,
 nothing else matters. Discovery needs to feel as natural as scrolling through a feed —
 not filling out a form. The map and location layer is critical because gear rental is
 fundamentally a local activity. Nobody ships a camera body across provinces for a
@@ -101,10 +101,10 @@ location, and a calendar showing when it's available. They can pause or unpause
 listings, update pricing, and block out dates when they need their gear back.
 
 **Why it matters:**
-Supply is the hardest side of any marketplace to build. GearLoop needs to make listing
+Supply is the hardest side of any marketplace to build. Rentra needs to make listing
 gear so simple that a non-technical person — a musician, a camper, a hobbyist
 photographer — can do it in under 5 minutes. The more listings exist, the more useful
-GearLoop becomes for renters. The more renters come, the more valuable listing becomes
+Rentra becomes for renters. The more renters come, the more valuable listing becomes
 for hosts. This flywheel only spins if creating a listing is frictionless.
 
 ---
@@ -136,10 +136,10 @@ returned. The platform takes a small commission from each transaction. The host 
 the remainder directly to their account after a successful rental.
 
 **Why it matters:**
-Money is where trust breaks down in informal gear lending. GearLoop removes the
+Money is where trust breaks down in informal gear lending. Rentra removes the
 awkwardness of cash transactions, the risk of non-payment, and the uncertainty of
 whether the gear will be returned. By holding payment until completion — and only
-releasing it after both parties confirm the rental ended well — GearLoop gives both
+releasing it after both parties confirm the rental ended well — Rentra gives both
 sides a financial safety net. The host knows they'll be paid. The renter knows they
 have recourse if something goes wrong.
 
@@ -150,14 +150,14 @@ have recourse if something goes wrong.
 **What it does:**
 Once a booking request is submitted, the renter and host can message each other directly
 inside the app. They coordinate pickup details, ask questions about the gear, confirm
-the handover time, and handle the return. All communication stays inside GearLoop.
+the handover time, and handle the return. All communication stays inside Rentra.
 
 **Why it matters:**
 Gear rental is personal. Unlike buying a product from a store, renting gear involves
 meeting another person, handling something valuable, and building enough mutual trust
 to make the exchange comfortable. Messaging inside the app serves two purposes: it
 makes the practical coordination easy, and it keeps all communication on the platform
-— which protects both parties and gives GearLoop visibility into disputes if they arise.
+— which protects both parties and gives Rentra visibility into disputes if they arise.
 
 ---
 
@@ -171,12 +171,12 @@ written review of each other. These reviews are visible to future users when dec
 whether to list to or rent from someone.
 
 **Why it matters:**
-This is the single most important feature in GearLoop — and the least visible. Every
+This is the single most important feature in Rentra — and the least visible. Every
 other feature only works if both parties trust each other enough to go through with the
 transaction. The verification badge tells a renter: this is a real person with a
 verified ID, not a scam account. The review system tells a host: this renter has a
-track record of returning gear in good condition. Without this layer, GearLoop is just
-a classifieds board. With it, GearLoop is a community where reputation has real value.
+track record of returning gear in good condition. Without this layer, Rentra is just
+a classifieds board. With it, Rentra is a community where reputation has real value.
 
 ---
 
@@ -215,21 +215,21 @@ and responsive.
 
 ## The Experience We're Designing For
 
-GearLoop should feel like borrowing from a trusted neighbor — not renting from a
+Rentra should feel like borrowing from a trusted neighbor — not renting from a
 corporation. The entire product should communicate:
 
 - **Warmth** — this is a community of people helping each other
 - **Confidence** — your gear is safe, your money is protected, your transaction is real
 - **Simplicity** — finding and booking gear should take minutes, not an afternoon
 
-Every screen, every notification, every piece of copy in GearLoop should serve one of
+Every screen, every notification, every piece of copy in Rentra should serve one of
 those three feelings.
 
 ---
 
 ## What Success Looks Like (Phase 1)
 
-GearLoop succeeds in its first phase when:
+Rentra succeeds in its first phase when:
 
 - A musician in Sorsogon can find and rent a speaker system for a weekend event
   without leaving the app
@@ -243,9 +243,9 @@ That's the product. Not the technology behind it — the human experience it cre
 
 ---
 
-## What GearLoop Is NOT Building (Phase 1)
+## What Rentra Is NOT Building (Phase 1)
 
-To stay focused, GearLoop is deliberately not building these in Phase 1:
+To stay focused, Rentra is deliberately not building these in Phase 1:
 
 - **Delivery or shipping** — all rentals are pickup/return in person
 - **Subscription rentals** — all bookings are date-based, not recurring
@@ -327,5 +327,136 @@ leave reviews
 
 ---
 
-*Last updated: May 2026 | Version 1.0*
-*Owner: Chard — Founder, GearLoop*
+## Screen Inventory & Design Tracker
+
+The complete list of screens Rentra needs, used to track design and build coverage. Many screens
+have several states (loading, empty, error, and per-status variants), so the real frame count is
+roughly 120.
+
+**Columns:** *Phase* follows the development plan (0 UI foundation · 1 Payments & booking core ·
+2 Notifications & trust · 3 Discovery & retention · 4 Compliance & polish). *Figma* = designed in
+the Rentra Figma file. *Code* = a Flutter screen exists (UI scaffolded unless noted otherwise
+in §7 of `CLAUDE.md`). Update the ✅ marks as work lands.
+
+### 1. Entry & Auth
+| # | Screen | Phase | Figma | Code |
+|---|---|---|---|---|
+| 1 | Splash | 4 | ✅ | |
+| 2 | Onboarding carousel | 4 | ✅ | |
+| 3 | Log in | 4 | ✅ | ✅ |
+| 4 | Sign up | 4 | | ✅ |
+| 5 | Forgot password + "Email sent" confirmation | 4 | | ✅ |
+| 6 | Verify email (waiting + link-expired states) | 4 | | |
+| 7 | Account setup (name, photo, phone verification) | 4 | | |
+
+### 2. Browse & Discovery
+| # | Screen | Phase | Figma | Code |
+|---|---|---|---|---|
+| 8 | Home / Browse | 3 | ✅ | ✅ |
+| 9 | Search: recent searches and suggestions | 3 | | |
+| 10 | Search results with filter chips | 3 | | |
+| 11 | Filters sheet (category, price, dates, distance, condition) | 3 | | |
+| 12 | Date picker sheet | 3 | | |
+| 13 | Map results view | 3 | | |
+| 14 | Favorites | 3 | | |
+| 15 | Location picker | 3 | | ✅ |
+| 16 | Browse states: loading skeleton, empty, no results, offline, error | 0 | | |
+
+### 3. Listing & Booking (Renter)
+| # | Screen | Phase | Figma | Code |
+|---|---|---|---|---|
+| 17 | Listing detail + photo viewer (swipe and zoom) | 1 | ✅ | ✅ |
+| 18 | Host profile (public) with reviews | 2 | | |
+| 19 | Reviews list | 2 | | |
+| 20 | Cancellation policy sheet | 1 | | |
+| 21 | Booking request (dates, handover/return, notes) | 1 | | ✅ |
+| 22 | Booking summary | 1 | ✅ | |
+| 23 | Sign-in prompt for guests who try to book | 1 | | |
+| 24 | Booking collision popup (dates no longer available) | 1 | | |
+| 25 | Request sent confirmation | 1 | | |
+| 26 | My bookings (upcoming, active, past tabs) | 1 | | ✅ |
+| 27 | Booking detail, per status: pending, accepted, active, completed, declined, cancelled, disputed | 1 | | ✅ |
+| 28 | Cancel booking: reason + refund preview, confirm dialog, result | 1 | | |
+| 29 | Reschedule request: pick new dates, confirm | 1 | | |
+| 30 | Booking receipt + add to calendar | 1 | | |
+
+### 4. Payments
+| # | Screen | Phase | Figma | Code |
+|---|---|---|---|---|
+| 31 | Choose payment method (GCash, Maya, card) | 1 | | |
+| 32 | Checkout with deposit and fee breakdown | 1 | | ✅ (UI stub) |
+| 33 | Add card | 1 | | |
+| 34 | Payment processing / redirect | 1 | | |
+| 35 | Payment success | 1 | | |
+| 36 | Payment failed with retry | 1 | | |
+| 37 | Payment timed out / abandoned | 1 | | |
+| 38 | Billing history + payment detail | 3 | | |
+
+### 5. Messaging
+| # | Screen | Phase | Figma | Code |
+|---|---|---|---|---|
+| 39 | Inbox (with empty and loading states) | 2 | | ✅ |
+| 40 | Chat (typing indicator, failed-send, image message) | 2 | | ✅ |
+
+### 6. Notifications
+| # | Screen | Phase | Figma | Code |
+|---|---|---|---|---|
+| 41 | Notification center (unread, empty, error states) | 2 | | ✅ (static UI) |
+| 42 | Push permission pre-prompt (shown before the system dialog) | 2 | | |
+| 43 | Push permission denied, with "Open settings" nudge | 2 | | |
+| 44 | Notification preferences | 2 | | |
+| 45 | Push notification designs (lock-screen and banner): request received, accepted, declined, payment confirmed, pickup reminder, return reminder, cancelled, new message | 2 | | |
+| 46 | Unread dot on tab bar + in-app toast | 2 | | |
+
+### 7. Host
+| # | Screen | Phase | Figma | Code |
+|---|---|---|---|---|
+| 47 | My listings (with empty state) | 1 | | ✅ |
+| 48 | Create listing, multi-step: photos, details, price and deposit, location, availability, cancellation policy, review and publish | 1 | | ✅ |
+| 49 | Edit listing + pause / delete confirm | 1 | | |
+| 50 | Incoming booking request: accept or decline, with decline reason | 1 | | |
+| 51 | Host booking detail with handover/return checklist | 1 | | |
+| 52 | Earnings and payout history | 3 | | |
+| 53 | Host verification: ID upload, pending, approved, rejected | 2 | | |
+
+### 8. Reviews & Trust
+| # | Screen | Phase | Figma | Code |
+|---|---|---|---|---|
+| 54 | Write review with star rating | 2 | | ✅ |
+| 55 | Review submitted confirmation | 2 | | |
+| 56 | Report issue / dispute flow: type, photos, submit | 2 | | |
+
+### 9. Profile & Account
+| # | Screen | Phase | Figma | Code |
+|---|---|---|---|---|
+| 57 | Profile | 4 | | ✅ |
+| 58 | Edit profile | 4 | | ✅ |
+| 59 | Phone verification (code entry) | 4 | | |
+| 60 | Login & security: change email and password | 4 | | |
+| 61 | Delete account: warning, then final confirm | 4 | | |
+| 62 | Help & support, legal pages | 4 | | |
+
+### 10. System States
+| # | Screen | Phase | Figma | Code |
+|---|---|---|---|---|
+| 63 | No internet (full screen) | 0 | | |
+| 64 | Generic error with retry | 0 | | |
+| 65 | Session expired, sign in again | 4 | | |
+| 66 | Maintenance / force-update | 4 | | |
+| 67 | Permission denied: location, photos | 4 | | |
+
+### 11. Shared Overlays
+| # | Screen | Phase | Figma | Code |
+|---|---|---|---|---|
+| 68 | Confirm dialogs: destructive, discard changes | 0 | ✅ (component) | |
+| 69 | Toast set in use (success, error, info) | 0 | ✅ (component) | |
+| 70 | Bottom-sheet pattern with header | 0 | | |
+| 71 | Tab bar (default, selected, unread-dot states) | 0 | | |
+
+**Design order:** Phase 1 core (17–38) → Phase 2 (39–46, 54–56) → Host (47–53) → System states and
+overlays (63–71) → Phases 3–4 (search, filters, map, favorites, profile, account deletion).
+
+---
+
+*Last updated: October 2026 | Version 1.1*
+*Owner: Chard — Founder, Rentra*

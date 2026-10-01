@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gearloop/core/errors/failures.dart';
-import 'package:gearloop/features/bookings/domain/entities/booking_entity.dart';
-import 'package:gearloop/features/bookings/domain/repositories/bookings_repository.dart';
-import 'package:gearloop/features/bookings/domain/usecases/create_booking_request.dart';
+import 'package:rentra/core/errors/failures.dart';
+import 'package:rentra/features/bookings/domain/entities/booking_entity.dart';
+import 'package:rentra/features/bookings/domain/repositories/bookings_repository.dart';
+import 'package:rentra/features/bookings/domain/usecases/create_booking_request.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockBookingsRepository extends Mock implements BookingsRepository {}

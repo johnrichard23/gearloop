@@ -4,7 +4,7 @@ import '../constants/app_colors.dart';
 import '../constants/app_spacing.dart';
 import '../constants/app_text_styles.dart';
 
-/// Labeled text field with GearLoop fill and border styling.
+/// Labeled text field with Rentra fill and border styling.
 class AppTextField extends StatelessWidget {
   const AppTextField({
     required this.label,

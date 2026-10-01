@@ -1,4 +1,4 @@
-/// GearLoop design tokens — spacing, radius, and icon sizes.
+/// Rentra design tokens — spacing, radius, and icon sizes.
 abstract final class AppSpacing {
   AppSpacing._();
 

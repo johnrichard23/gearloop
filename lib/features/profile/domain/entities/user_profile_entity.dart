@@ -1,6 +1,6 @@
 import 'package:equatable/equatable.dart';
 
-/// Domain model for a GearLoop user profile (not yet mapped from Supabase).
+/// Domain model for a Rentra user profile (not yet mapped from Supabase).
 class UserProfileEntity extends Equatable {
   const UserProfileEntity({
     required this.id,

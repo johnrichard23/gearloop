@@ -1,4 +1,4 @@
-# CLAUDE.md — GearLoop
+# CLAUDE.md — Rentra
 
 > Condensed, Claude-Code-optimized doctrine for this repo. Full detail lives in
 > `CONSTITUTION.md`, `PRD.md`, `ARCHITECTURE.md`, `SYSTEM_REQUIREMENTS.md` — read those
@@ -7,9 +7,9 @@
 
 ---
 
-## 1. What GearLoop Is
+## 1. What Rentra Is
 
-GearLoop is a peer-to-peer equipment rental marketplace for the Philippines (Bicol/Sorsogon
+Rentra is a peer-to-peer equipment rental marketplace for the Philippines (Bicol/Sorsogon
 first, then SEA): gear owners (hosts) list underutilized equipment — cameras, drones, audio,
 camping, instruments — and renters book it by the day with a deposit and reviews as the trust
 layer. It is rental only (not sales, not delivery, not a social app); revenue is a 12% platform
@@ -130,7 +130,7 @@ inlined:
 - Verify Stripe/PayMongo webhook signatures before processing — never trust an unverified
   payment webhook.
 - Validate file type and size (max 10MB, images only) before upload to Supabase Storage.
-- Payment data never touches GearLoop servers directly — handled entirely by Stripe/PayMongo.
+- Payment data never touches Rentra servers directly — handled entirely by Stripe/PayMongo.
 - JWT expires 1hr, refresh token 7 days. No plaintext tokens in local storage. Rate-limit
   auth endpoints (max 5 attempts).
 
@@ -181,7 +181,7 @@ Test files mirror `lib/` under `test/` (e.g.
 pure UI widgets, full screens, or third-party SDK behavior.
 
 After finishing a feature or fixing a significant bug, proactively ask whether
-`PROJECT_DOCUMENTATION.md`, `DEVELOPMENT_JOURNEY*.md`, or `PRD.md` ("What GearLoop is NOT
+`PROJECT_DOCUMENTATION.md`, `DEVELOPMENT_JOURNEY*.md`, or `PRD.md` ("What Rentra is NOT
 building") should be updated — don't wait to be asked.
 
 ---
@@ -207,7 +207,7 @@ building") should be updated — don't wait to be asked.
 - Notifications — **static UI only** (`notification_center_screen.dart` with a domain
   entity); no FCM push, no Supabase Realtime subscription feeding it — top Phase 2 priority
   per PRD
-- Next.js web dashboard (`gearloop-web/`) — does not exist in this repo yet
+- Next.js web dashboard (`rentra-web/`) — does not exist in this repo yet
 - Sumsub ID verification — deferred to Phase 2 (manual admin verification in MVP)
 - Stripe (international cards) — deferred to Phase 2
 - Supabase Edge Functions (`on-booking-accepted`, payout release, webhook handlers, review

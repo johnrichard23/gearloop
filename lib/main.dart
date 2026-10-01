@@ -25,7 +25,7 @@ Future<void> main() async {
 
   runApp(
     const ProviderScope(
-      child: GearLoopApp(),
+      child: RentraApp(),
     ),
   );
 }

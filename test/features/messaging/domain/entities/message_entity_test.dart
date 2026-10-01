@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gearloop/features/messaging/domain/entities/message_entity.dart';
+import 'package:rentra/features/messaging/domain/entities/message_entity.dart';
 
 void main() {
   group('MessageEntity', () {
