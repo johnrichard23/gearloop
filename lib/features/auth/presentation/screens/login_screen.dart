@@ -11,7 +11,7 @@ import '../widgets/auth_pill_field.dart';
 import '../widgets/auth_shell.dart';
 import '../widgets/social_sign_in_button.dart';
 
-/// Log in: a full-screen photo with the form on a centred frosted-glass panel.
+/// Log in: a flat cream AuthShell layout for the sign-in form.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
