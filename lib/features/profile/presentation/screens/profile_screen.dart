@@ -13,7 +13,7 @@ import '../../domain/entities/user_profile_entity.dart';
 const UserProfileEntity dummyUser = UserProfileEntity(
   id: 'user-1',
   fullName: 'Chard Dela Cruz',
-  email: 'chard@gearloop.ph',
+  email: 'chard@rentra.ph',
   phone: '+63 912 345 6789',
   avatarUrl: null,
   memberSince: 'May 2026',

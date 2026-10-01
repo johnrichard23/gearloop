@@ -5,8 +5,8 @@ import 'core/constants/app_spacing.dart';
 import 'core/router/app_router.dart';
 
 /// Root widget: routing + theme.
-class GearLoopApp extends StatelessWidget {
-  const GearLoopApp({super.key});
+class RentraApp extends StatelessWidget {
+  const RentraApp({super.key});
 
   static final ThemeData _theme = ThemeData(
     useMaterial3: true,
@@ -56,7 +56,7 @@ class GearLoopApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'GearLoop',
+      title: 'Rentra',
       debugShowCheckedModeBanner: false,
       routerConfig: appRouter,
       theme: _theme,

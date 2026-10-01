@@ -1,12 +1,12 @@
-# GearLoop — Architecture Design Document
+# Rentra — Architecture Design Document
 > Version 1.0 | May 2026
-> This document defines the system architecture, folder structure, data models, and technical decisions for GearLoop.
+> This document defines the system architecture, folder structure, data models, and technical decisions for Rentra.
 
 ---
 
 ## 1. System Overview
 
-GearLoop follows a **client-server architecture** with two client surfaces (Flutter mobile app + Next.js web) sharing a single Supabase backend. There is no custom API server — Supabase acts as the entire backend layer via its PostgREST API, Realtime, Storage, Auth, and Edge Functions.
+Rentra follows a **client-server architecture** with two client surfaces (Flutter mobile app + Next.js web) sharing a single Supabase backend. There is no custom API server — Supabase acts as the entire backend layer via its PostgREST API, Realtime, Storage, Auth, and Edge Functions.
 
 ```
 ┌─────────────────────┐    ┌─────────────────────┐
@@ -59,7 +59,7 @@ GearLoop follows a **client-server architecture** with two client surfaces (Flut
 
 ### Pattern: Clean Architecture (Feature-First)
 
-GearLoop follows Clean Architecture with a feature-first folder organization. Each feature is a self-contained vertical slice with its own data, domain, and presentation layers.
+Rentra follows Clean Architecture with a feature-first folder organization. Each feature is a self-contained vertical slice with its own data, domain, and presentation layers.
 
 ### Folder Structure
 
@@ -378,7 +378,7 @@ Serverless functions in Supabase for logic that can't live in the client:
 ## 6. Next.js Web App Structure
 
 ```
-gearloop-web/
+rentra-web/
 ├── app/
 │   ├── (marketing)/             # Public marketing pages
 │   │   ├── page.tsx             # Landing page

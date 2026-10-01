@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gearloop/core/errors/failures.dart';
-import 'package:gearloop/features/listings/domain/entities/listing_entity.dart';
-import 'package:gearloop/features/listings/domain/repositories/listings_repository.dart';
-import 'package:gearloop/features/listings/domain/usecases/create_listing.dart';
+import 'package:rentra/core/errors/failures.dart';
+import 'package:rentra/features/listings/domain/entities/listing_entity.dart';
+import 'package:rentra/features/listings/domain/repositories/listings_repository.dart';
+import 'package:rentra/features/listings/domain/usecases/create_listing.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockListingsRepository extends Mock implements ListingsRepository {}

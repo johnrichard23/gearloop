@@ -1,12 +1,12 @@
-# GearLoop — System Requirements Document
+# Rentra — System Requirements Document
 > Version 1.0 | May 2026
-> This document defines what GearLoop must do (functional) and how it must perform (non-functional).
+> This document defines what Rentra must do (functional) and how it must perform (non-functional).
 
 ---
 
 ## 1. Executive Summary
 
-GearLoop is a peer-to-peer equipment rental marketplace targeting the Philippine market, starting in the Bicol/Sorsogon region. It connects gear owners (hosts) with people who need equipment temporarily (renters), facilitating the entire transaction — discovery, booking, payment, and trust — through a mobile app (iOS + Android) and a web dashboard.
+Rentra is a peer-to-peer equipment rental marketplace targeting the Philippine market, starting in the Bicol/Sorsogon region. It connects gear owners (hosts) with people who need equipment temporarily (renters), facilitating the entire transaction — discovery, booking, payment, and trust — through a mobile app (iOS + Android) and a web dashboard.
 
 ---
 
@@ -221,7 +221,7 @@ GearLoop is a peer-to-peer equipment rental marketplace targeting the Philippine
 | SEC-02 | Supabase Row Level Security (RLS) enforced on every table |
 | SEC-03 | JWT tokens expire after 1 hour, refresh tokens after 7 days |
 | SEC-04 | No sensitive data stored on device (no plaintext tokens in local storage) |
-| SEC-05 | Payment data never touches GearLoop servers — handled entirely by Stripe/PayMongo |
+| SEC-05 | Payment data never touches Rentra servers — handled entirely by Stripe/PayMongo |
 | SEC-06 | File uploads validated for type (images only) and size (max 10MB) |
 | SEC-07 | Rate limiting on auth endpoints (max 5 attempts before lockout) |
 

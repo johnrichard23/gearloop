@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gearloop/features/bookings/domain/usecases/calculate_booking_price.dart';
+import 'package:rentra/features/bookings/domain/usecases/calculate_booking_price.dart';
 
 void main() {
   group('CalculateBookingPrice', () {

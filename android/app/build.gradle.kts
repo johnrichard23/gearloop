@@ -19,7 +19,7 @@ if (envFile.exists()) {
 }
 
 android {
-    namespace = "com.example.gearloop"
+    namespace = "com.example.rentra"
     compileSdk = 36
     ndkVersion = flutter.ndkVersion
 
@@ -33,7 +33,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.gearloop"
+        applicationId = "com.example.rentra"
         minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode

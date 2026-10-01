@@ -68,7 +68,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               children: [
                 const SizedBox(height: AppSpacing.kSpacing32),
                 Text(
-                  'GearLoop',
+                  'Rentra',
                   style: AppTextStyles.kTextHeading1.copyWith(
                     color: AppColors.kColorPrimary,
                   ),

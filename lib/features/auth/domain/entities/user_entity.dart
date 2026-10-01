@@ -1,4 +1,4 @@
-/// Domain model for a GearLoop user — aligns with the public `users` table (ARCHITECTURE.md).
+/// Domain model for a Rentra user — aligns with the public `users` table (ARCHITECTURE.md).
 class UserEntity {
   const UserEntity({
     required this.id,

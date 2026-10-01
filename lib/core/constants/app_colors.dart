@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// GearLoop design tokens — Theme 2: Ocean & Coral.
+/// Rentra design tokens — Theme 2: Ocean & Coral.
 abstract final class AppColors {
   AppColors._();
 

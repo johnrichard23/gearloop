@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gearloop/features/reviews/domain/entities/review_entity.dart';
+import 'package:rentra/features/reviews/domain/entities/review_entity.dart';
 
 void main() {
   group('ReviewEntity', () {

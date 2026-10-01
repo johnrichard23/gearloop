@@ -1,9 +1,9 @@
 import 'package:dartz/dartz.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:gearloop/core/errors/failures.dart';
-import 'package:gearloop/features/reviews/domain/entities/review_entity.dart';
-import 'package:gearloop/features/reviews/domain/repositories/reviews_repository.dart';
-import 'package:gearloop/features/reviews/domain/usecases/submit_review.dart';
+import 'package:rentra/core/errors/failures.dart';
+import 'package:rentra/features/reviews/domain/entities/review_entity.dart';
+import 'package:rentra/features/reviews/domain/repositories/reviews_repository.dart';
+import 'package:rentra/features/reviews/domain/usecases/submit_review.dart';
 import 'package:mocktail/mocktail.dart';
 
 class MockReviewsRepository extends Mock implements ReviewsRepository {}
