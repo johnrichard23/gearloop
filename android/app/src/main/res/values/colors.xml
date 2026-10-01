@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Rentra forest green (AppColors.kColorPrimary): the colour the Flutter
+         splash screen starts on, so there is no flash between the two. -->
+    <color name="launch_background">#2A5251</color>
+</resources>

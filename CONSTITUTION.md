@@ -54,14 +54,14 @@ A marketplace where gear owners (hosts) list underutilized equipment — cameras
 
 ## 3. Flutter Code Standards
 
-### Official Color Palette — Teal
-- Primary:    #1F6F63 (Teal)
-- Accent:     #6FA897 (Sage — fills and icons only, not text on white)
-- Background: #F7FAF9 (Soft mint white)
-- Text:       #1A1A2E (Near black)
-- Success:    #16A34A (Green)
-- Warning:    #D97706 (Amber)
-- Error:      #C0392B (Red)
+### Official Color Palette — Earthy
+- Primary:    #2A5251 (Deep forest green)
+- Accent:     #C8A26C (Gold — fills and icons only, not text; dark text on top)
+- Background: #F3EFEA (Warm cream)
+- Text:       #1F2D2B (Deep green-black)
+- Success:    #2E7A47 (Green)
+- Warning:    #A65E0C (Amber)
+- Error:      #B54A3A (Terracotta)
 
 ### Architecture
 - Use **Clean Architecture** with **feature-first folder structure**
@@ -183,6 +183,7 @@ Never set clipBehavior without an accompanying decoration.
 - Write `any` types in TypeScript
 - Add TODO comments and leave them unresolved
 - Suggest Firebase as an alternative to Supabase
+- Copy another product's layout, assets or copy: inspiration only (§14)
 
 ### When the AI is unsure:
 - Ask one specific clarifying question — do not assume
@@ -353,7 +354,7 @@ screens look and behave; they extend (never replace) the token rules in §3.
   with a regular and an emphasized weight) and the spacing scale. Do not invent one-off sizes.
 - Pick **one** corner radius per element family and reuse it: inputs and buttons share a radius;
   cards share a larger radius; pills/avatars use the circular radius.
-- Color carries meaning, not decoration: Primary for brand and navigation, Accent (Sage) for the
+- Color carries meaning, not decoration: Primary for brand and navigation, Accent (Gold) for the
   one main action per screen, Error only for destructive/failed states, Success/Warning for
   status. Never use Accent for two competing actions on one screen.
 - When a design tint has no matching token, add a named token to `AppColors` — do not inline a hex.
@@ -442,5 +443,61 @@ Loading, content, empty, error — all designed, none left blank.
 
 ---
 
-*Last updated: September 2026 | Version 1.1*
+## 14. Originality and Inspiration
+
+**Principle:** we may study existing apps, designs and open projects, pattern ourselves on them and
+take inspiration from them. **We never copy them.** Rentra must look, read and feel like Rentra.
+
+### 14.1 What is fair game and what is not
+Learn from (allowed):
+- Common interaction patterns and conventions: steppers, bottom sheets, tab bars, carousels,
+  pull-to-refresh, pill buttons, empty states.
+- Principles: visual hierarchy, spacing rhythm, motion timing, information order, accessibility
+  practice.
+- What a flow must contain (what a log-in or checkout screen needs to do its job).
+
+Never copy (not allowed):
+- A distinctive composition: the same layout, element for element, or another product's signature
+  visual device.
+- Illustrations, photos, icons, logos, mascots, animations, video or fonts we do not hold a
+  licence for.
+- Copy: headlines, taglines, microcopy, onboarding scripts.
+- A brand's colour palette or look-and-feel, brand names, or anything that could be confused with
+  another product.
+- Source code, assets or design files from others unless the licence allows it (and credit is
+  given where the licence requires it).
+
+### 14.2 The "change it" test
+Before a screen influenced by a reference ships, check:
+1. Would someone looking at it for a few seconds think it belongs to another product?
+2. Can you point to elements that exist only because the reference has them?
+3. Is it built from Rentra's own tokens, type, copy and idea (§3, §13)?
+
+If the answer to 1 or 2 is yes, redesign until Rentra's identity leads: earthy palette, Bricolage
+Grotesque headlines, a warm neighbour-to-neighbour voice. When in doubt, make it different.
+
+### 14.3 Working with references
+- References are for the team's eyes only. Keep them in a local folder or the design tool; never
+  bundle them in the app, and do not commit them unless their licence allows it.
+- Do not name the reference product in code, comments, commit messages, docs or UI copy. Record the
+  *pattern* learned and why it fits, in `design/decisions.md`.
+- Note what we took (the principle) and what we deliberately did differently.
+
+### 14.4 Assets and licences
+- Fonts, photos, icons, illustrations and packages must carry a licence that permits commercial
+  use. Record the source and licence in `design/` (for example Bricolage Grotesque, SIL OFL 1.1,
+  kept at `assets/fonts/OFL.txt`).
+- Stock photos: read the licence page; no identifiable people or third-party logos without a release.
+- New third-party packages need approval (§7) and a permissive licence.
+- Placeholder brand glyphs (for example the sign-in provider logos drawn in code) are replaced with
+  the official assets, following each provider's brand guidelines, before release.
+
+### 14.5 For the AI
+- Treat any reference the user shares as inspiration only, and propose an original composition.
+- If a request would closely reproduce a reference, say so and offer a distinct alternative.
+- Never paste, trace or recreate protected assets or copy from a reference.
+
+---
+
+*Last updated: October 2026 | Version 1.2*
 *Treat this document as infrastructure. Update it intentionally, not casually.*

@@ -11,6 +11,7 @@ class AppButton extends StatelessWidget {
     required this.onTap,
     this.isLoading = false,
     this.isOutlined = false,
+    this.isPill = false,
     this.color,
     super.key,
   });
@@ -19,7 +20,13 @@ class AppButton extends StatelessWidget {
   final VoidCallback onTap;
   final bool isLoading;
   final bool isOutlined;
+
+  /// Fully rounded ends instead of the default input-style radius.
+  final bool isPill;
   final Color? color;
+
+  double get _radius =>
+      isPill ? AppSpacing.kRadiusCircular : AppSpacing.kRadiusMedium;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +47,7 @@ class AppButton extends StatelessWidget {
         disabledBackgroundColor: buttonColor.withValues(alpha: 0.6),
         disabledForegroundColor: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.kRadiusMedium),
+          borderRadius: BorderRadius.circular(_radius),
         ),
         padding: const EdgeInsets.symmetric(vertical: 14),
       ),
@@ -56,7 +63,7 @@ class AppButton extends StatelessWidget {
         disabledForegroundColor: buttonColor.withValues(alpha: 0.6),
         side: BorderSide(color: buttonColor),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppSpacing.kRadiusMedium),
+          borderRadius: BorderRadius.circular(_radius),
         ),
         padding: const EdgeInsets.symmetric(vertical: 14),
       ),

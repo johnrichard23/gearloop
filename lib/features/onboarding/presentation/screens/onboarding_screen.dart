@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
+import '../../../../core/widgets/legal_notice.dart';
 import '../widgets/cloud_bank.dart';
 import '../widgets/earn_scene.dart';
 import '../widgets/gear_radar_scene.dart';
@@ -17,12 +18,15 @@ import '../widgets/timer_next_button.dart';
 
 /// First-run story: auto-advancing slides with a segmented progress bar.
 ///
-/// The animated scene floats on the page; the text sits on a teal panel that
+/// The animated scene floats on the page; the text sits on a tinted panel that
 /// rises out of drifting clouds. Each slide runs a 0–1 timeline
 /// ([_kSlideDuration]). Its scene collapses to a point at the end, the text
 /// reveals anew, and the next scene grows out of the same point. The last
-/// slide holds at [_kHoldPoint] and shows the exit actions. Guests can leave
-/// at any time via Skip or "Start browsing".
+/// slide holds at [_kHoldPoint] and shows the exit actions. Slides advance on
+/// their own until the user swipes or taps Next; from then on the user is in
+/// control and each slide just plays to its hold point. Guests can leave at
+/// any time via Skip or "Start browsing", and people who already have an
+/// account can go straight to Log in.
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -78,6 +82,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   bool _reduceMotion = false;
   bool _started = false;
 
+  /// Set once the user swipes or taps Next: auto-advance stops for good.
+  bool _manual = false;
+
   bool get _isLast => _index == _slides.length - 1;
 
   @override
@@ -113,13 +120,18 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 
   void _onStatus(AnimationStatus status) {
-    if (status == AnimationStatus.completed && !_isLast) {
+    // An animation that only runs to the hold point also reports `completed`,
+    // so slides that hold must be excluded here.
+    if (status == AnimationStatus.completed && !_holds) {
       _goTo(_index + 1);
     }
   }
 
+  /// Whether the current slide stops at [_kHoldPoint] instead of auto-advancing.
+  bool get _holds => _isLast || _manual;
+
   void _play() {
-    if (_isLast) {
+    if (_holds) {
       _controller.animateTo(
         _kHoldPoint,
         duration: _kSlideDuration * _kHoldPoint,
@@ -129,9 +141,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     }
   }
 
-  void _goTo(int index) {
+  void _goTo(int index, {bool byUser = false}) {
     if (index < 0 || index >= _slides.length || !mounted) return;
-    setState(() => _index = index);
+    setState(() {
+      _index = index;
+      if (byUser) _manual = true;
+    });
     _controller.value = 0;
     if (_reduceMotion) return;
     _reveal.forward(from: 0);
@@ -140,8 +155,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   void _onDragEnd(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
-    if (velocity < -_kSwipeVelocity) _goTo(_index + 1);
-    if (velocity > _kSwipeVelocity) _goTo(_index - 1);
+    if (velocity < -_kSwipeVelocity) _goTo(_index + 1, byUser: true);
+    if (velocity > _kSwipeVelocity) _goTo(_index - 1, byUser: true);
   }
 
   void _enterAsGuest() => _finish('/home');
@@ -197,7 +212,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
           builder: (context, _) {
             final fill = _reduceMotion
                 ? 1.0
-                : _controller.value / (_isLast ? _kHoldPoint : 1);
+                : _controller.value / (_holds ? _kHoldPoint : 1);
             return OnboardingProgressBar(
               count: _slides.length,
               index: _index,
@@ -285,11 +300,20 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                 ),
               ),
               const SizedBox(height: AppSpacing.kSpacing8),
-              SizedBox(
-                height: _kControlsHeight,
-                child: AnimatedSwitcher(
-                  duration: _kControlsSwap,
-                  child: _isLast ? _buildExitActions() : _buildCounterAndNext(),
+              AnimatedSize(
+                duration: _kControlsSwap,
+                curve: Curves.easeOutCubic,
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(
+                    minHeight: _kControlsHeight,
+                  ),
+                  child: AnimatedSwitcher(
+                    duration: _kControlsSwap,
+                    child: _isLast
+                        ? _buildExitActions()
+                        : _buildAccountAndNext(),
+                  ),
                 ),
               ),
             ],
@@ -299,25 +323,31 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     );
   }
 
-  Widget _buildCounterAndNext() {
-    final current = (_index + 1).toString().padLeft(2, '0');
-    final total = _slides.length.toString().padLeft(2, '0');
+  Widget _buildAccountAndNext() {
     return Row(
-      key: const ValueKey<String>('counter-next'),
+      key: const ValueKey<String>('account-next'),
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Text(
-          '$current / $total',
-          style: AppTextStyles.kTextLabel.copyWith(
-            color: AppColors.kColorTextSecondary,
+        TextButton(
+          onPressed: _goToLogin,
+          style: TextButton.styleFrom(
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(0, _kLinkButtonHeight),
+            alignment: Alignment.centerLeft,
+          ),
+          child: Text(
+            'I have an account',
+            style: AppTextStyles.kTextButton.copyWith(
+              color: AppColors.kColorPrimary,
+            ),
           ),
         ),
         AnimatedBuilder(
           animation: _controller,
           builder: (context, _) => TimerNextButton(
-            fill: _reduceMotion ? 0 : _controller.value,
-            onTap: () => _goTo(_index + 1),
+            fill: _reduceMotion || _manual ? 0 : _controller.value,
+            onTap: () => _goTo(_index + 1, byUser: true),
           ),
         ),
       ],
@@ -344,6 +374,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
             ),
           ),
         ),
+        const SizedBox(height: AppSpacing.kSpacing8),
+        const LegalNotice(prefix: 'By continuing'),
       ],
     );
   }

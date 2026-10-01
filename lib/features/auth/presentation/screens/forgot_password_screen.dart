@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_text_field.dart';
+import '../widgets/auth_pill_field.dart';
+import '../widgets/auth_shell.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -37,48 +36,33 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Forgot password'),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.kSpacing24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Enter your email and we will send you a reset link.',
-                  style: AppTextStyles.kTextBodyMedium,
-                ),
-                const SizedBox(height: AppSpacing.kSpacing24),
-                AppTextField(
-                  label: 'Email',
-                  controller: _emailController,
-                  hint: 'you@example.com',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: _validateEmail,
-                ),
-                const SizedBox(height: AppSpacing.kSpacing24),
-                AppButton(
-                  label: 'Send Reset Link',
-                  onTap: _onSendResetLink,
-                ),
-                const SizedBox(height: AppSpacing.kSpacing16),
-                TextButton(
-                  onPressed: () => context.go('/login'),
-                  child: Text(
-                    'Back to login',
-                    style: AppTextStyles.kTextBodyMedium.copyWith(
-                      color: AppColors.kColorPrimary,
-                    ),
-                  ),
-                ),
-              ],
+    return AuthShell(
+      lead: 'Reset your ',
+      highlight: 'password',
+      subtitle: 'Enter your email and we will send you a reset link.',
+      onBack: () => context.go('/login'),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AuthPillField(
+              label: 'Email',
+              controller: _emailController,
+              hint: 'you@example.com',
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.done,
+              autofillHints: const [AutofillHints.email],
+              validator: _validateEmail,
+              onSubmitted: (_) => _onSendResetLink(),
             ),
-          ),
+            const SizedBox(height: AppSpacing.kSpacing20),
+            AppButton(
+              label: 'Send reset link',
+              onTap: _onSendResetLink,
+              isPill: true,
+            ),
+          ],
         ),
       ),
     );

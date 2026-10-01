@@ -81,17 +81,17 @@ Router).
 - Sealed classes for result types (Success/Failure).
 - Async functions must handle errors explicitly — no silent catches, no bare `dynamic`.
 
-**Official palette (teal)** — must be wired through `AppColors`, never
+**Official palette (earthy)** — must be wired through `AppColors`, never
 inlined:
 | Token | Hex | Use |
 |---|---|---|
-| Primary | `#1F6F63` | Teal |
-| Accent | `#6FA897` | Sage (fills/icons only, not text on white) |
-| Background | `#F7FAF9` | Soft mint white |
-| Text | `#1A1A2E` | Near black |
-| Success | `#16A34A` | Green |
-| Warning | `#D97706` | Amber |
-| Error | `#C0392B` | Red |
+| Primary | `#2A5251` | Deep forest green |
+| Accent | `#C8A26C` | Gold (fills/icons only, not text; dark text on top) |
+| Background | `#F3EFEA` | Warm cream |
+| Text | `#1F2D2B` | Deep green-black |
+| Success | `#2E7A47` | Green |
+| Warning | `#A65E0C` | Amber |
+| Error | `#B54A3A` | Terracotta |
 
 **Database (Supabase/Postgres)**
 - Tables `snake_case` plural; columns `snake_case`; every table has `id` (uuid),
@@ -107,6 +107,8 @@ inlined:
 - Never install new packages, or change folder structure, without being asked.
 - Never use deprecated Flutter APIs, `dynamic` in Dart, or `any` in TypeScript.
 - Never leave unresolved TODOs. Never hallucinate function/package APIs — check docs first.
+- Take inspiration from existing apps and projects, never copy them: no copied layouts, assets or
+  copy, and never name a reference product in repo files. See `CONSTITUTION.md` §14.
 
 **Web (Next.js) rules**
 - TypeScript strict mode, no `any`. App Router. Server Components by default —
