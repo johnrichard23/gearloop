@@ -3,36 +3,37 @@
 Source of truth for look and feel is the Figma `Design System` page. Dart constants live in
 `lib/core/constants/`. Naming: Figma `color/primary` ↔ Dart `AppColors.kColorPrimary`.
 
-> **Palette status:** `app_colors.dart` was moved to the teal palette below on 2026-10-01. Names
-> and hex values match Figma.
+> **Palette status:** `app_colors.dart` uses the earthy palette below (forest green, cream, gold),
+> adopted 2026-10-01. **The Figma `Rentra Colors` variables still hold the earlier teal values** and
+> must be updated to match; names are unchanged.
 
 ## Colors (collection: Rentra Colors)
 
 | Figma variable | Hex | Dart constant | Use |
 |---|---|---|---|
-| `color/primary` | `#1F6F63` | `kColorPrimary` | Brand, primary buttons, links, prices |
-| `color/primary-light` | `#2A8576` | `kColorPrimaryLight` | Active/hover, info badge |
-| `color/primary-faded` | `#E4F1EE` | `kColorPrimaryFaded` | Tinted backgrounds, chips, info banner |
-| `color/accent` | `#6FA897` | `kColorAccent` | Highlights (not for text on white) |
-| `color/accent-light` | `#E8F3EF` | `kColorAccentLight` | Accent-tinted backgrounds |
-| `color/background` | `#F7FAF9` | `kColorBackground` | App background |
-| `color/surface` | `#FFFFFF` | `kColorSurface` | Cards, sheets |
-| `color/surface-variant` | `#F1F5F4` | `kColorSurfaceVariant` | Secondary surfaces, disabled fields |
-| `color/text` | `#1A1A2E` | `kColorTextPrimary` | Headings, body emphasis |
-| `color/text-muted` | `#6B7280` | `kColorTextSecondary` | Descriptions, metadata |
-| `color/text-hint` | `#9CA3AF` | `kColorTextHint` | Placeholders, disabled text |
-| `color/success` / `-light` | `#16A34A` / `#DCFCE7` | `kColorSuccess` / `kColorSuccessLight` | Completed, verified |
-| `color/warning` / `-light` | `#D97706` / `#FEF3C7` | `kColorWarning` / `kColorWarningLight` | Pending, deposit |
-| `color/error` / `-light` | `#C0392B` / `#FDECEA` | `kColorError` / `kColorErrorLight` | Failure, destructive |
-| `color/border` | `#E5E7EB` | `kColorBorder` | Default borders |
-| `color/border-strong` | `#D1D5DB` | `kColorBorderDark` | Emphasized borders, disabled outline |
+| `color/primary` | `#2A5251` | `kColorPrimary` | Brand, primary buttons, links, prices |
+| `color/primary-light` | `#3D6B68` | `kColorPrimaryLight` | Active/hover, info badge |
+| `color/primary-faded` | `#E4E9E3` | `kColorPrimaryFaded` | Tinted backgrounds, chips, info banner |
+| `color/accent` | `#C8A26C` | `kColorAccent` | Highlights, main-action fill (not for text) |
+| `color/accent-light` | `#F3E9D8` | `kColorAccentLight` | Accent-tinted backgrounds |
+| `color/background` | `#F3EFEA` | `kColorBackground` | App background |
+| `color/surface` | `#FBF9F5` | `kColorSurface` | Cards, sheets |
+| `color/surface-variant` | `#ECE5DA` | `kColorSurfaceVariant` | Secondary surfaces, disabled fields |
+| `color/text` | `#1F2D2B` | `kColorTextPrimary` | Headings, body emphasis |
+| `color/text-muted` | `#5E6A66` | `kColorTextSecondary` | Descriptions, metadata |
+| `color/text-hint` | `#7C8680` | `kColorTextHint` | Placeholders, disabled text |
+| `color/success` / `-light` | `#2E7A47` / `#E3F0E5` | `kColorSuccess` / `kColorSuccessLight` | Completed, verified |
+| `color/warning` / `-light` | `#A65E0C` / `#F8E9CF` | `kColorWarning` / `kColorWarningLight` | Pending, deposit |
+| `color/error` / `-light` | `#B54A3A` / `#F6E0DB` | `kColorError` / `kColorErrorLight` | Failure, destructive |
+| `color/border` | `#E2DBCF` | `kColorBorder` | Default borders |
+| `color/border-strong` | `#CFC6B8` | `kColorBorderDark` | Emphasized borders, disabled outline |
 
 **On-colors and aliases** (`kColorOnPrimary` and `kColorOnAccent` are in `AppColors`; the two aliases are added with the Toast and Skeleton widgets):
 
 | Figma variable | Value | Use |
 |---|---|---|
 | `color/on-primary` | `#FFFFFF` | Text/icons on primary, error, toast |
-| `color/on-accent` | `#0B2F29` | Text on accent fill (white fails contrast, ~2.7:1) |
+| `color/on-accent` | `#1E3A39` | Text on gold fill (white fails contrast, ~2.4:1) |
 | `color/inverse-surface` | alias of `color/text` | Toast background |
 | `color/skeleton` | alias of `color/border` | Skeleton placeholder fill |
 

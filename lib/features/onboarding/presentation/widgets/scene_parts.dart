@@ -16,7 +16,7 @@ BoxDecoration sceneCardDecoration(double radius) => BoxDecoration(
   ],
 );
 
-/// The teal dot every scene grows out of and collapses back into. It is only
+/// The primary-colour dot every scene grows out of and collapses back into. It is only
 /// visible while the scene is small (low [growth]).
 class SceneOriginDot extends StatelessWidget {
   const SceneOriginDot({required this.growth, super.key});

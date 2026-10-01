@@ -6,8 +6,10 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/app_text_field.dart';
+import '../../../../core/widgets/legal_notice.dart';
 import '../../data/repositories/auth_repository_impl.dart';
+import '../widgets/auth_pill_field.dart';
+import '../widgets/auth_shell.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -37,7 +39,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    final success = await ref.read(authProvider.notifier).signUpWithEmail(
+    final success = await ref
+        .read(authProvider.notifier)
+        .signUpWithEmail(
           email: _emailController.text.trim(),
           password: _passwordController.text,
           fullName: _fullNameController.text.trim(),
@@ -52,11 +56,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       return;
     }
 
-    final message = ref.read(authProvider).errorMessage ??
+    final message =
+        ref.read(authProvider).errorMessage ??
         'Something went wrong. Please try again.';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   String? _validateConfirmPassword(String? value) {
@@ -73,64 +78,82 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget build(BuildContext context) {
     final isLoading = ref.watch(authProvider).isLoading;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Register'),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.kSpacing24),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                AppTextField(
-                  label: 'Full name',
-                  controller: _fullNameController,
-                  validator: _validateNotEmpty,
+    return AuthShell(
+      lead: 'Create your ',
+      highlight: 'account',
+      subtitle: 'Join Rentra to rent and lend gear.',
+      footer: TextButton(
+        onPressed: () => context.pop(),
+        child: Text.rich(
+          TextSpan(
+            text: 'Already have an account? ',
+            style: AppTextStyles.kTextBodyMedium,
+            children: [
+              TextSpan(
+                text: 'Log in',
+                style: AppTextStyles.kTextBodyMedium.copyWith(
+                  color: AppColors.kColorPrimary,
+                  fontWeight: FontWeight.w700,
                 ),
-                const SizedBox(height: AppSpacing.kSpacing16),
-                AppTextField(
-                  label: 'Email',
-                  controller: _emailController,
-                  hint: 'you@example.com',
-                  keyboardType: TextInputType.emailAddress,
-                  validator: _validateEmail,
-                ),
-                const SizedBox(height: AppSpacing.kSpacing16),
-                AppTextField(
-                  label: 'Password',
-                  controller: _passwordController,
-                  obscureText: true,
-                  validator: _validateNotEmpty,
-                ),
-                const SizedBox(height: AppSpacing.kSpacing16),
-                AppTextField(
-                  label: 'Confirm password',
-                  controller: _confirmPasswordController,
-                  obscureText: true,
-                  validator: _validateConfirmPassword,
-                ),
-                const SizedBox(height: AppSpacing.kSpacing24),
-                AppButton(
-                  label: 'Register',
-                  onTap: _onRegister,
-                  isLoading: isLoading,
-                ),
-                const SizedBox(height: AppSpacing.kSpacing16),
-                TextButton(
-                  onPressed: () => context.pop(),
-                  child: Text(
-                    'Already have an account? Login',
-                    style: AppTextStyles.kTextBodyMedium.copyWith(
-                      color: AppColors.kColorPrimary,
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
+        ),
+      ),
+      onBack: () => context.pop(),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AuthPillField(
+              label: 'Full name',
+              controller: _fullNameController,
+              hint: 'Your name',
+              keyboardType: TextInputType.name,
+              textInputAction: TextInputAction.next,
+              autofillHints: const [AutofillHints.name],
+              validator: _validateNotEmpty,
+            ),
+            const SizedBox(height: AppSpacing.kSpacing12),
+            AuthPillField(
+              label: 'Email',
+              controller: _emailController,
+              hint: 'you@example.com',
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              autofillHints: const [AutofillHints.email],
+              validator: _validateEmail,
+            ),
+            const SizedBox(height: AppSpacing.kSpacing12),
+            AuthPillField(
+              label: 'Password',
+              controller: _passwordController,
+              isPassword: true,
+              textInputAction: TextInputAction.next,
+              autofillHints: const [AutofillHints.newPassword],
+              validator: _validateNotEmpty,
+            ),
+            const SizedBox(height: AppSpacing.kSpacing12),
+            AuthPillField(
+              label: 'Confirm password',
+              controller: _confirmPasswordController,
+              isPassword: true,
+              textInputAction: TextInputAction.done,
+              autofillHints: const [AutofillHints.newPassword],
+              validator: _validateConfirmPassword,
+              onSubmitted: (_) => _onRegister(),
+            ),
+            const SizedBox(height: AppSpacing.kSpacing20),
+            AppButton(
+              label: 'Create account',
+              onTap: _onRegister,
+              isLoading: isLoading,
+              isPill: true,
+            ),
+            const SizedBox(height: AppSpacing.kSpacing12),
+            const LegalNotice(prefix: 'By creating an account'),
+          ],
         ),
       ),
     );

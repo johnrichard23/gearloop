@@ -34,6 +34,8 @@ abstract interface class AuthRepository {
 
   Future<AuthSignInResult> signInWithGoogle();
 
+  Future<AuthSignInResult> signInWithFacebook();
+
   Future<void> signOut();
 
   /// Emits `null` when signed out; otherwise the latest `users` profile for the session.

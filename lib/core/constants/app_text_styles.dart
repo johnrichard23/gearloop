@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_colors.dart';
 
-/// Rentra design tokens — typography (teal palette).
+/// Rentra design tokens — typography (earthy palette).
 abstract final class AppTextStyles {
   AppTextStyles._();
 

@@ -1,10 +1,9 @@
-import 'dart:ui' show PathMetric;
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/widgets/accent_headline.dart';
 
 /// Text block of an onboarding slide: eyebrow, headline with one highlighted
 /// word, and a supporting line. [reveal] (0–1) staggers them in.
@@ -25,8 +24,6 @@ class OnboardingCopy extends StatelessWidget {
   final Animation<double> reveal;
 
   static const double _kRise = 14;
-  static const double _kSwooshHeight = 8;
-  static const double _kSwooshStroke = 4;
 
   @override
   Widget build(BuildContext context) {
@@ -78,72 +75,10 @@ class OnboardingCopy extends StatelessWidget {
       1,
       curve: Curves.easeInOut,
     ).transform(reveal.value);
-    return Text.rich(
-      TextSpan(
-        style: AppTextStyles.kTextDisplay,
-        children: [
-          TextSpan(text: lead),
-          WidgetSpan(
-            alignment: PlaceholderAlignment.baseline,
-            baseline: TextBaseline.alphabetic,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Text(
-                  highlight,
-                  style: AppTextStyles.kTextDisplay.copyWith(
-                    color: AppColors.kColorPrimary,
-                  ),
-                ),
-                Positioned(
-                  left: 0,
-                  right: 0,
-                  bottom: -_kSwooshHeight / 2,
-                  height: _kSwooshHeight,
-                  child: CustomPaint(painter: _SwooshPainter(swoosh)),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    return AccentHeadline(lead: lead, highlight: highlight, swoosh: swoosh);
   }
 
   Widget _buildBody() {
     return Text(body, style: AppTextStyles.kTextBodyLarge);
   }
-}
-
-/// Hand-drawn style underline that draws itself left to right.
-class _SwooshPainter extends CustomPainter {
-  _SwooshPainter(this.progress);
-
-  final double progress;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    if (progress <= 0) return;
-    final path = Path()
-      ..moveTo(0, size.height * 0.7)
-      ..cubicTo(
-        size.width * 0.3,
-        size.height * 1.1,
-        size.width * 0.65,
-        size.height * 0.1,
-        size.width,
-        size.height * 0.45,
-      );
-    final paint = Paint()
-      ..color = AppColors.kColorAccent
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..strokeWidth = OnboardingCopy._kSwooshStroke;
-    for (final PathMetric metric in path.computeMetrics()) {
-      canvas.drawPath(metric.extractPath(0, metric.length * progress), paint);
-    }
-  }
-
-  @override
-  bool shouldRepaint(_SwooshPainter old) => old.progress != progress;
 }

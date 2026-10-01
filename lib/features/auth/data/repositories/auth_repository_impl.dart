@@ -76,6 +76,11 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
+  Future<AuthSignInResult> signInWithFacebook() async {
+    return const AuthSignInFailure(AuthSignInFailureReason.providerNotAvailable);
+  }
+
+  @override
   Future<void> signOut() async {
     await _supabase.auth.signOut();
   }
@@ -157,6 +162,35 @@ class AuthNotifier extends StateNotifier<AuthState> {
       email: email,
       password: password,
     );
+
+    switch (result) {
+      case AuthSignInSuccess():
+        state = state.copyWith(isLoading: false, clearError: true);
+        return true;
+      case AuthSignInFailure(:final reason):
+        state = state.copyWith(
+          isLoading: false,
+          errorMessage: _messageForSignInFailure(reason),
+        );
+        return false;
+    }
+  }
+
+  Future<bool> signInWithApple() =>
+      _signInWithProvider(_repository.signInWithApple);
+
+  Future<bool> signInWithGoogle() =>
+      _signInWithProvider(_repository.signInWithGoogle);
+
+  Future<bool> signInWithFacebook() =>
+      _signInWithProvider(_repository.signInWithFacebook);
+
+  Future<bool> _signInWithProvider(
+    Future<AuthSignInResult> Function() signIn,
+  ) async {
+    state = state.copyWith(isLoading: true, clearError: true);
+
+    final result = await signIn();
 
     switch (result) {
       case AuthSignInSuccess():

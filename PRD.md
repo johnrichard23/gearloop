@@ -349,6 +349,13 @@ in §7 of `CLAUDE.md`). Update the ✅ marks as work lands.
 | 6 | Verify email (waiting + link-expired states) | 4 | | |
 | 7 | Account setup (name, photo, phone verification) | 4 | | |
 
+> **Web note (Next.js dashboard):** the web app's Entry & Auth screens (log in, sign up, forgot
+> password) must look like their mobile counterparts: a flat cream page, a large display headline
+> with one highlighted word and a hand-drawn underline, pill-shaped fields and buttons, and the
+> secondary link ("New to Rentra? Sign up") pinned at the bottom. On wide screens, centre the form
+> in a narrow column. Mobile is designed and built first; the web version reuses its tokens and
+> copy. The web app is not started yet (`CLAUDE.md` §7).
+
 ### 2. Browse & Discovery
 | # | Screen | Phase | Figma | Code |
 |---|---|---|---|---|
