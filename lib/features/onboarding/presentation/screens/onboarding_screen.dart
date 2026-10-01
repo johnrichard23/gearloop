@@ -155,8 +155,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   void _onDragEnd(DragEndDetails details) {
     final velocity = details.primaryVelocity ?? 0;
-    if (velocity < -_kSwipeVelocity) _goTo(_index + 1, byUser: true);
-    if (velocity > _kSwipeVelocity) _goTo(_index - 1, byUser: true);
+    if (velocity.abs() <= _kSwipeVelocity) return;
+    // Any qualifying swipe is manual, even one that cannot change the slide
+    // (e.g. swiping back on the first slide), so auto-advance stops.
+    if (!_manual) setState(() => _manual = true);
+    _goTo(velocity < 0 ? _index + 1 : _index - 1, byUser: true);
   }
 
   void _enterAsGuest() => _finish('/home');
