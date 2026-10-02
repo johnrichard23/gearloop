@@ -46,6 +46,7 @@ dependencies:
   riverpod_annotation: ^2.6.1
   supabase_flutter: ^2.8.4
   shared_preferences: ^2.5.5
+  cupertino_native_better: ^1.6.0
 
 dev_dependencies:
   mocktail: ^1.0.4

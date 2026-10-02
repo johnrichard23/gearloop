@@ -188,7 +188,12 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                     return const Center(child: CircularProgressIndicator());
                   }
                   return GridView.builder(
-                    padding: const EdgeInsets.all(AppSpacing.kSpacing16),
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.kSpacing16,
+                      AppSpacing.kSpacing16,
+                      AppSpacing.kSpacing16,
+                      AppSpacing.kSpacing16 + MediaQuery.paddingOf(context).bottom,
+                    ),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
@@ -233,7 +238,12 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
                     return _BrowseMapView(listings: listings);
                   }
                   return GridView.builder(
-                    padding: const EdgeInsets.all(AppSpacing.kSpacing16),
+                    padding: EdgeInsets.fromLTRB(
+                      AppSpacing.kSpacing16,
+                      AppSpacing.kSpacing16,
+                      AppSpacing.kSpacing16,
+                      AppSpacing.kSpacing16 + MediaQuery.paddingOf(context).bottom,
+                    ),
                     gridDelegate:
                         const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
