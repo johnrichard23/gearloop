@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/pending_route.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../widgets/auth_pill_field.dart';
 import '../widgets/auth_shell.dart';
+import '../widgets/guest_browse_link.dart';
 import '../widgets/social_sign_in_button.dart';
 
 /// Log in: a flat cream AuthShell layout for the sign-in form.
@@ -59,7 +61,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       return;
     }
     if (success) {
-      context.go('/home');
+      PendingRoute.goAfterAuth(context);
       return;
     }
     final message =
@@ -157,7 +159,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Widget _buildFooter() {
-    return TextButton(
+    final signUp = TextButton(
       onPressed: () => context.push('/register'),
       child: Text.rich(
         TextSpan(
@@ -174,6 +176,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ],
         ),
       ),
+    );
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [signUp, const GuestBrowseLink()],
     );
   }
 }

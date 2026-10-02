@@ -9,7 +9,7 @@ import '../../domain/repositories/auth_repository.dart';
 /// [AuthRepository] backed by Supabase Auth and the public `users` table.
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({SupabaseClient? client})
-      : _supabase = client ?? Supabase.instance.client;
+    : _supabase = client ?? Supabase.instance.client;
 
   final SupabaseClient _supabase;
 
@@ -32,7 +32,9 @@ class AuthRepositoryImpl implements AuthRepository {
       final user = await _fetchUser(authUser.id);
       return AuthSignInSuccess(user);
     } on AuthException {
-      return const AuthSignInFailure(AuthSignInFailureReason.invalidCredentials);
+      return const AuthSignInFailure(
+        AuthSignInFailureReason.invalidCredentials,
+      );
     } on Exception {
       return const AuthSignInFailure(AuthSignInFailureReason.unknown);
     }
@@ -59,25 +61,29 @@ class AuthRepositoryImpl implements AuthRepository {
     } on AuthException catch (e) {
       return Left(Failure(e.message));
     } on Exception {
-      return const Left(
-        Failure('Something went wrong. Please try again.'),
-      );
+      return const Left(Failure('Something went wrong. Please try again.'));
     }
   }
 
   @override
   Future<AuthSignInResult> signInWithApple() async {
-    return const AuthSignInFailure(AuthSignInFailureReason.providerNotAvailable);
+    return const AuthSignInFailure(
+      AuthSignInFailureReason.providerNotAvailable,
+    );
   }
 
   @override
   Future<AuthSignInResult> signInWithGoogle() async {
-    return const AuthSignInFailure(AuthSignInFailureReason.providerNotAvailable);
+    return const AuthSignInFailure(
+      AuthSignInFailureReason.providerNotAvailable,
+    );
   }
 
   @override
   Future<AuthSignInResult> signInWithFacebook() async {
-    return const AuthSignInFailure(AuthSignInFailureReason.providerNotAvailable);
+    return const AuthSignInFailure(
+      AuthSignInFailureReason.providerNotAvailable,
+    );
   }
 
   @override
@@ -101,11 +107,7 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   Future<UserEntity> _fetchUser(String id) async {
-    final row = await _supabase
-        .from('users')
-        .select()
-        .eq('id', id)
-        .single();
+    final row = await _supabase.from('users').select().eq('id', id).single();
     return _mapUser(row);
   }
 
@@ -127,10 +129,7 @@ class AuthRepositoryImpl implements AuthRepository {
 }
 
 class AuthState {
-  const AuthState({
-    this.isLoading = false,
-    this.errorMessage,
-  });
+  const AuthState({this.isLoading = false, this.errorMessage});
 
   final bool isLoading;
   final String? errorMessage;
@@ -205,6 +204,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
+  /// Ends the session. Returns false (with [AuthState.errorMessage] set) when
+  /// the sign-out request fails, so the caller stays on the signed-in screen.
+  Future<bool> signOut() async {
+    try {
+      await _repository.signOut();
+      return true;
+    } on AuthException {
+      state = state.copyWith(
+        errorMessage: 'Could not log out. Please try again.',
+      );
+      return false;
+    }
+  }
+
   Future<bool> signUpWithEmail({
     required String email,
     required String password,
@@ -220,10 +233,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
     return result.fold(
       (failure) {
-        state = state.copyWith(
-          isLoading: false,
-          errorMessage: failure.message,
-        );
+        state = state.copyWith(isLoading: false, errorMessage: failure.message);
         return false;
       },
       (_) {
@@ -236,8 +246,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
 
 String _messageForSignInFailure(AuthSignInFailureReason reason) {
   return switch (reason) {
-    AuthSignInFailureReason.invalidCredentials =>
-      'Invalid email or password.',
+    AuthSignInFailureReason.invalidCredentials => 'Invalid email or password.',
     AuthSignInFailureReason.cancelledByUser => 'Sign in was cancelled.',
     AuthSignInFailureReason.network =>
       'Network error. Please check your connection.',
