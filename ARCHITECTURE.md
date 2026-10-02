@@ -279,7 +279,8 @@ listing_id      uuid REFERENCES gear_listings(id) ON DELETE RESTRICT
 renter_id       uuid REFERENCES users(id) ON DELETE RESTRICT
 host_id         uuid REFERENCES users(id) ON DELETE RESTRICT
 start_date      date NOT NULL
-end_date        date NOT NULL
+end_date        date NOT NULL   -- last rented day, counted as fully taken
+pickup_time     time            -- planned: time to collect the gear on start_date (information only)
 total_days      integer NOT NULL
 daily_rate      numeric(10,2) NOT NULL
 subtotal        numeric(10,2) NOT NULL
@@ -450,4 +451,100 @@ CI/CD:            GitHub Actions → Vercel (web), GitHub Actions → manual (mo
 
 ---
 
-*Last updated: May 2026 | Version 1.0*
+## 9. Availability and Date Filtering (backend plan)
+
+Status: planned. The date range screen and the Browse "Dates" row exist in the app, but the dates do
+not yet filter results, because the backend cannot answer "which listings are free on these days?".
+This section records what we know and what is still to decide. We build it step by step, together.
+
+### 9.1 Where things stand
+- **The schema is not in the repo.** There is no `supabase/` folder or SQL file; the tables exist
+  only in the Supabase dashboard, and §3 above is the intended design. Step one is to bring the real
+  schema under version control (`supabase/migrations`).
+- **The app reads booked days per listing** (`getBookedDatesForListing`: bookings with status
+  `accepted` or `active`). This is a direct table query. §4 says a renter can only SELECT their own
+  bookings, so this query may return only the renter's own bookings and miss everyone else's. Check
+  the live policies before relying on it.
+- **`listing_availability`** (one row per blocked day, reason `booked` or `host_blocked`) is in the
+  design, and `on-booking-accepted` is meant to fill it, but §5 Edge Functions do not exist yet, so
+  nothing writes it.
+- **Browse filter:** nothing returns "listings free for a date range".
+
+### 9.2 Principles
+- **The server decides.** The app asks a question and gets an answer; it never reads other people's
+  bookings. Availability is public; booking details are not.
+- **Search and booking are separate jobs.** Search is a fast read that may be a moment stale.
+  Booking is a careful write and is re-checked at submit. The calendar is a convenience, not the
+  final authority; show a clear "no longer available" message if a day was taken meanwhile.
+- **Ranges are half-open in the database.** Use Postgres `daterange` with the overlap operator (`&&`),
+  where the first day is included and the day after the last is excluded.
+- **The database refuses double bookings.** An exclusion constraint on `bookings` (same
+  `listing_id`, overlapping `daterange`, only for active statuses, needs `btree_gist`) stops two
+  renters taking the same days even if they tap at the same moment.
+- **Store plain dates, not timestamps.** Rentra is in the Philippines (UTC+8); a timestamp at device
+  midnight lands on the previous UTC day. Send and store `date` values as `YYYY-MM-DD`.
+- **Month-sized questions for the calendar.** Ask for one month window at a time and cache loaded
+  months in the app, with a skeleton while loading.
+
+### 9.3 Decisions and open questions
+**Decided (October 2026):**
+1. **Rentals are per day, with a pickup time that is information only.** The renter picks a day range,
+   then a pickup time for the first day. The time does not affect availability.
+2. **The last day is fully taken.** A rental from Oct 10 to Oct 14 occupies Oct 14 entirely; the next
+   rental can start on Oct 15. In the database this is `daterange(start_date, end_date + 1)`, half-open.
+3. **Booking flow order:** dates screen, then a separate pickup-time screen, then review and request.
+   The Browse dates filter has dates only.
+4. **Schema change:** add `bookings.pickup_time` (type `time`, nullable until the time step ships).
+5. **Pending requests block the dates.** Statuses that occupy days: `pending`, `accepted`, `active`
+   (`declined`, `cancelled`, `completed` and `disputed` do not). The app's booked-days query currently
+   uses only `accepted` and `active` and must add `pending`. Consequences to design for: a request that
+   the host ignores must release its days (expiry after the 24-hour response window), and a renter must
+   not be able to block a listing by sending many requests (limit pending requests per renter and per
+   listing).
+
+**Still open:**
+1. **Where availability comes from.** Option A: read the per-day `listing_availability` table (public,
+   also supports host-blocked days, kept in sync when a booking is accepted or cancelled). Option B:
+   compute it from `bookings` with the overlap rule inside a function. Either way the app calls a
+   function; the choice is about what the function reads.
+2. **Minimum rental days** per listing, checked in the booking screen and by the server.
+3. **Releasing ignored requests.** Because pending requests block dates, something must expire them
+   after the 24-hour response window and free their days, and nobody clicks a button to do that. Decide
+   the mechanism (a scheduled database job or a scheduled function) and what status an expired request
+   gets (for example `expired`, or `declined` with a reason), including the renter notification. To be
+   discussed when we reach the backend build.
+
+### 9.4 Safety layers (a pattern already proven in a similar booking app)
+Availability is checked at three points, each by the server, and the screen only reflects the answer:
+1. **Display.** A function returns, for a window (one month), a yes/no per day. The app greys out the
+   "no" days. This is a convenience and may be a moment stale.
+2. **Pre-check before committing.** A `validate` call takes the exact selection and returns
+   `{ isAvailable, conflictType }`, for example `TIME` (taken), `LISTING_INACTIVE`, `PRICE_CHANGED`.
+   The app calls it before the final step and again right before creating the booking. If the call
+   fails because of the network, the app lets the user continue, because layer 3 still protects them.
+3. **The write itself re-checks inside the transaction** and returns a conflict with the same
+   `conflictType` if the days were just taken. This is the real guarantee; here it is the exclusion
+   constraint on `bookings`.
+
+When any layer says "no longer available", the app shows one clear message, clears the stale pick and
+anything chosen after it, refetches fresh availability, and reopens the date step.
+
+Related behaviours worth copying: a pending hold the user created themselves must not count as a
+competitor when they re-check; and every conflict reason maps to one specific message, not a generic
+error.
+
+### 9.5 Plan
+1. Put the real schema in `supabase/migrations` and compare it with §3.
+2. Check Row Level Security for `bookings` and `listing_availability` (who can read what).
+3. Write the overlap rule and the function(s), for example `available_listing_ids(start, end)` for
+   Browse and a per-month booked-days function for the booking calendar.
+4. Add the exclusion constraint on `bookings`.
+5. App side: a repository method, a use case and a provider, then one new filter criterion on
+   `ListingFilter`, and a `DayAvailability` implementation for the booking calendar. The calendar
+   widget already exposes `DayAvailability`, `onMonthChanged` and `isLoading` for this.
+6. Unit tests for each use case; test the SQL with the cases: back-to-back ranges, one-day ranges,
+   cancelled bookings, and ranges that span a month boundary.
+
+---
+
+*Last updated: October 2026 | Version 1.1*

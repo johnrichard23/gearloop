@@ -341,8 +341,8 @@ in §7 of `CLAUDE.md`). Update the ✅ marks as work lands.
 ### 1. Entry & Auth
 | # | Screen | Phase | Figma | Code |
 |---|---|---|---|---|
-| 1 | Splash | 4 | ✅ | |
-| 2 | Onboarding carousel | 4 | ✅ | |
+| 1 | Splash | 4 | ✅ | ✅ |
+| 2 | Onboarding carousel | 4 | ✅ | ✅ |
 | 3 | Log in | 4 | ✅ | ✅ |
 | 4 | Sign up | 4 | | ✅ |
 | 5 | Forgot password + "Email sent" confirmation | 4 | | ✅ |
@@ -355,6 +355,12 @@ in §7 of `CLAUDE.md`). Update the ✅ marks as work lands.
 > secondary link ("New to Rentra? Sign up") pinned at the bottom. On wide screens, centre the form
 > in a narrow column. Mobile is designed and built first; the web version reuses its tokens and
 > copy. The web app is not started yet (`CLAUDE.md` §7).
+
+> **Guest mode (built):** a guest can browse but not act. Log in and Create account both offer
+> "Browse as guest". Post, Bookings and Profile show a "Log in or sign up" prompt, and the Profile tab
+> reads "Log in". Opening any account-only screen (booking request, chat, create listing, reviews,
+> notifications, edit profile) sends a guest to Log in, then returns them to the listing they were
+> viewing after they sign in. This covers #23; it is a redirect to Log in, not a separate screen.
 
 ### 2. Browse & Discovery
 | # | Screen | Phase | Figma | Code |
@@ -376,9 +382,9 @@ in §7 of `CLAUDE.md`). Update the ✅ marks as work lands.
 | 18 | Host profile (public) with reviews | 2 | | |
 | 19 | Reviews list | 2 | | |
 | 20 | Cancellation policy sheet | 1 | | |
-| 21 | Booking request (dates, handover/return, notes) | 1 | | ✅ |
+| 21 | Booking request (dates, pickup time, notes) | 1 | | ✅ |
 | 22 | Booking summary | 1 | ✅ | |
-| 23 | Sign-in prompt for guests who try to book | 1 | | |
+| 23 | Sign-in prompt for guests who try to book | 1 | | ✅ |
 | 24 | Booking collision popup (dates no longer available) | 1 | | |
 | 25 | Request sent confirmation | 1 | | |
 | 26 | My bookings (upcoming, active, past tabs) | 1 | | ✅ |
@@ -458,12 +464,12 @@ in §7 of `CLAUDE.md`). Update the ✅ marks as work lands.
 | 68 | Confirm dialogs: destructive, discard changes | 0 | ✅ (component) | |
 | 69 | Toast set in use (success, error, info) | 0 | ✅ (component) | |
 | 70 | Bottom-sheet pattern with header | 0 | | |
-| 71 | Tab bar (default, selected, unread-dot states) | 0 | | |
+| 71 | Tab bar (default, selected, unread-dot states) | 0 | | ✅ (no unread dot yet) |
 
 **Design order:** Phase 1 core (17–38) → Phase 2 (39–46, 54–56) → Host (47–53) → System states and
 overlays (63–71) → Phases 3–4 (search, filters, map, favorites, profile, account deletion).
 
 ---
 
-*Last updated: October 2026 | Version 1.1*
+*Last updated: October 2026 | Version 1.2*
 *Owner: Chard — Founder, Rentra*

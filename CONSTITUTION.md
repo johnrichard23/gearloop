@@ -174,6 +174,7 @@ Never set clipBehavior without an accompanying decoration.
 - Use existing `AppColors`, `AppTextStyles`, `AppSpacing` constants
 - Write null-safe Dart — no force-unwraps without justification
 - Consult the reference skills in §15 before designing or building UI
+- Apply SOLID to every change (§16.1), and keep each screen to one job (§16.2)
 
 ### The AI must never:
 - Install new packages without being asked
@@ -510,6 +511,8 @@ and say which you used. This list grows over time: add new skills here, not in a
 | `/anthropic-skills:flutter-app-design-skill` | Any Flutter UI: screens, flows, onboarding, tab bars, sheets, motion, dark mode, text scaling, navigation semantics. The default for Rentra work. |
 | `/anthropic-skills:canvas-design` | Static visual pieces: posters, illustrations, marketing and brand visuals, and design exploration outside the app UI. |
 | `/anthropic-skills:swiftui-app-design-skill` | Reference only for iOS-native feel: HIG fidelity, navigation semantics, motion, Dynamic Type. Rentra is Flutter, so take the principles and express them in Flutter. Never write SwiftUI for the app. |
+| `/rentra-ux-laws` | Rentra's own skill (`.claude/skills/rentra-ux-laws`): nine UX laws (including Proximity) plus everyday usability rules, as a design and review pass for every screen, flow, form and message. |
+| `/rentra-ui-styleguide` | Rentra's own skill (`.claude/skills/rentra-ui-styleguide`): which tokens and component recipes to use, and their states. Use for every piece of UI; its `references/` cover bottom bars, grouped settings lists, type hierarchy and composition (60-30-10, negative space, grid). |
 
 ### 15.1 How the skills fit the rest of this document
 - The stack (§2) and standards (§3, §13) win. A skill never overrides the tokens, Riverpod, Clean
@@ -520,5 +523,42 @@ and say which you used. This list grows over time: add new skills here, not in a
 
 ---
 
-*Last updated: October 2026 | Version 1.3*
+## 16. Engineering and Screen Discipline
+
+### 16.1 SOLID is mandatory
+Every change follows SOLID. This is a must, not a preference. In this codebase that means:
+- **Single responsibility.** A widget draws one thing; a provider holds one piece of state; a use
+  case owns one business rule; a repository owns one data source. A file with several jobs is split.
+  Filtering, sorting and validation never live inside a widget (see §3 Architecture).
+- **Open/closed.** Extend by adding a new class, widget or enum case, not by editing a growing
+  `if`/`switch` in shared code. A new filter is a new criterion, not another branch in the screen.
+- **Liskov substitution.** Anything that implements an interface (a repository, a data source) must
+  be usable wherever the interface is expected, with no surprising behaviour or extra preconditions.
+- **Interface segregation.** Depend on small, focused interfaces. A screen that only reads listings
+  must not depend on a repository that also creates and deletes them.
+- **Dependency inversion.** Presentation depends on domain abstractions, never on Supabase or other
+  concrete data code. Dependencies arrive through Riverpod providers so they can be replaced in tests.
+
+Before delivering code, check it against the five points. If a change cannot satisfy them, say so and
+propose the smaller change that can.
+
+### 16.2 One job per screen
+- A screen has one primary job and as few elements as that job needs. If a screen grows crowded, move
+  part of it to its own screen or sheet instead of adding more controls.
+- Logic must be easy to follow: one clear path, no hidden modes, no controls whose effect is unclear.
+  If a flow needs explaining, simplify it.
+
+### 16.3 Dates follow the booking-flow pattern
+Date selection is its own screen, not a crowded filter sheet:
+- a month calendar, with previous and next month, rounded day cells and a clear selected state;
+- days that cannot be chosen (past, or already booked) are disabled, with availability loaded for the
+  month being shown and a skeleton while it loads;
+- the choice stays a draft until the user confirms with the bottom bar (two buttons, the second
+  disabled until a day is picked).
+Rentals are per day, so Rentra selects a date range. A pickup time (information only, it does not change
+availability) is chosen on its own screen after the dates, in the booking flow, never in the Browse filter.
+
+---
+
+*Last updated: October 2026 | Version 1.4*
 *Treat this document as infrastructure. Update it intentionally, not casually.*
