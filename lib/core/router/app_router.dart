@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../network/supabase_client.dart';
 import 'pending_route.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
+import '../../features/date_selection/domain/entities/date_range_selection.dart';
+import '../../features/date_selection/presentation/screens/date_range_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
 import '../../features/home/presentation/screens/main_shell_screen.dart';
@@ -74,6 +76,17 @@ final GoRouter appRouter = GoRouter(
     GoRoute(
       path: '/forgot-password',
       builder: (context, state) => const ForgotPasswordScreen(),
+    ),
+    GoRoute(
+      path: '/dates',
+      builder: (context, state) {
+        final extra = state.extra;
+        return DateRangeScreen(
+          initial: extra is DateRangeSelection
+              ? extra
+              : DateRangeSelection.empty,
+        );
+      },
     ),
     GoRoute(
       path: '/create-listing',

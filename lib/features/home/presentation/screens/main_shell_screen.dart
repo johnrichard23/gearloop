@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -48,6 +49,13 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
     const ProfileScreen(),
   ];
 
+  /// Dark status-bar icons on the cream screens. The signed-in Profile has a
+  /// green header, so it keeps light icons. App-bar screens set their own.
+  SystemUiOverlayStyle _statusBarStyle({required bool isSignedIn}) {
+    final isGreenHeader = _selectedIndex == 4 && isSignedIn;
+    return isGreenHeader ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark;
+  }
+
   @override
   Widget build(BuildContext context) {
     final isSignedIn = ref.watch(isSignedInProvider);
@@ -55,7 +63,10 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
       backgroundColor: AppColors.kColorBackground,
       // Screens run underneath the floating bar; each pads its own scroll end.
       extendBody: true,
-      body: _tabBodies(isSignedIn: isSignedIn)[_selectedIndex],
+      body: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: _statusBarStyle(isSignedIn: isSignedIn),
+        child: _tabBodies(isSignedIn: isSignedIn)[_selectedIndex],
+      ),
       bottomNavigationBar: AdaptiveTabBar(
         currentIndex: _selectedIndex,
         onTap: (index) {

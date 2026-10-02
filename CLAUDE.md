@@ -107,9 +107,12 @@ inlined:
 - Never install new packages, or change folder structure, without being asked.
 - Never use deprecated Flutter APIs, `dynamic` in Dart, or `any` in TypeScript.
 - Never leave unresolved TODOs. Never hallucinate function/package APIs — check docs first.
+- SOLID is a must on every change (see `CONSTITUTION.md` §16.1). One job per screen: if a screen is
+  crowded, add a screen or sheet instead of more controls (§16.2). Dates follow §16.3.
 - Before designing or building UI, consult the reference skills listed in `CONSTITUTION.md` §15
   (currently `/anthropic-skills:flutter-app-design-skill`, `/anthropic-skills:canvas-design`,
-  `/anthropic-skills:swiftui-app-design-skill`) and say which you used.
+  `/anthropic-skills:swiftui-app-design-skill`), and Rentra's own `/rentra-ux-laws` and
+  `/rentra-ui-styleguide` (in `.claude/skills/`), and say which you used.
 - Take inspiration from existing apps and projects, never copy them: no copied layouts, assets or
   copy, and never name a reference product in repo files. See `CONSTITUTION.md` §14.
 
@@ -194,8 +197,11 @@ building") should be updated — don't wait to be asked.
 ## 7. Current Feature Status
 
 **Built (mobile, dummy or Supabase-backed as noted):**
-- Auth screens (login/register/forgot password) — UI scaffolded, email/social sign-in flows
-  not yet fully wired to Supabase Auth
+- Splash and onboarding; auth screens (log in / create account / reset password) — email
+  sign-in and sign-up on Supabase Auth; Apple/Google/Facebook return "not available yet"
+- Guest mode — guests browse; Post, Bookings, Profile show a login prompt; account-only routes
+  redirect to Log in and return to the listing after sign-in (`isSignedInProvider`, `PendingRoute`)
+- Bottom bar — real Liquid Glass on iOS 26+, Flutter floating pill elsewhere (`AdaptiveTabBar`)
 - Browse/Discovery, Listing Detail, Create Listing — **live on Supabase** (`gear_listings`
   data flows through)
 - Bookings (request/detail/my-bookings) — **live on Supabase**

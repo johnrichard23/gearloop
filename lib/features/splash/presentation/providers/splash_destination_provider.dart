@@ -13,3 +13,9 @@ final splashDestinationProvider = Provider<String>((ref) {
   final seen = ref.watch(onboardingRepositoryProvider).hasSeenOnboarding;
   return seen ? '/home' : '/onboarding';
 });
+
+/// Whether this is the very first launch (onboarding not seen yet). A first
+/// launch gets the full brand moment; returning users get a shorter one.
+final splashIsFirstLaunchProvider = Provider<bool>((ref) {
+  return !ref.watch(onboardingRepositoryProvider).hasSeenOnboarding;
+});

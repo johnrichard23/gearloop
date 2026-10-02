@@ -43,7 +43,7 @@ class AuthShell extends StatefulWidget {
 
 class _AuthShellState extends State<AuthShell>
     with SingleTickerProviderStateMixin {
-  static const Duration _kEntrance = Duration(milliseconds: 900);
+  static const Duration _kEntrance = Duration(milliseconds: 500);
   static const double _kRise = 14;
   static const double _kBackSize = 44;
 

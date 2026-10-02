@@ -14,15 +14,9 @@ class GuestBrowseLink extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextButton(
-      // Tight vertical padding so it sits close to the sign-up / log-in line
-      // above instead of floating a full 48pt tap target away.
       style: TextButton.styleFrom(
-        minimumSize: Size.zero,
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.kSpacing16,
-          vertical: AppSpacing.kSpacing4,
-        ),
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        minimumSize: const Size(AppSpacing.kSpacing48, AppSpacing.kSpacing48),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.kSpacing16),
       ),
       onPressed: () {
         // Browsing instead of signing in drops any screen they were headed to.
@@ -32,7 +26,7 @@ class GuestBrowseLink extends StatelessWidget {
       child: Text(
         'Browse as guest',
         style: AppTextStyles.kTextBodyMedium.copyWith(
-          color: AppColors.kColorPrimary,
+          color: AppColors.kColorTextSecondary,
         ),
       ),
     );

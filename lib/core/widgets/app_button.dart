@@ -12,6 +12,7 @@ class AppButton extends StatelessWidget {
     this.isLoading = false,
     this.isOutlined = false,
     this.isPill = false,
+    this.isEnabled = true,
     this.color,
     super.key,
   });
@@ -23,6 +24,9 @@ class AppButton extends StatelessWidget {
 
   /// Fully rounded ends instead of the default input-style radius.
   final bool isPill;
+
+  /// When false the button is dimmed and ignores taps.
+  final bool isEnabled;
   final Color? color;
 
   double get _radius =>
@@ -34,13 +38,15 @@ class AppButton extends StatelessWidget {
 
     return SizedBox(
       width: double.infinity,
-      child: isOutlined ? _buildOutlined(buttonColor) : _buildFilled(buttonColor),
+      child: isOutlined
+          ? _buildOutlined(buttonColor)
+          : _buildFilled(buttonColor),
     );
   }
 
   Widget _buildFilled(Color buttonColor) {
     return ElevatedButton(
-      onPressed: isLoading ? null : onTap,
+      onPressed: isLoading || !isEnabled ? null : onTap,
       style: ElevatedButton.styleFrom(
         backgroundColor: buttonColor,
         foregroundColor: Colors.white,
@@ -57,7 +63,7 @@ class AppButton extends StatelessWidget {
 
   Widget _buildOutlined(Color buttonColor) {
     return OutlinedButton(
-      onPressed: isLoading ? null : onTap,
+      onPressed: isLoading || !isEnabled ? null : onTap,
       style: OutlinedButton.styleFrom(
         foregroundColor: buttonColor,
         disabledForegroundColor: buttonColor.withValues(alpha: 0.6),
@@ -76,10 +82,7 @@ class AppButton extends StatelessWidget {
       return SizedBox(
         height: 20,
         width: 20,
-        child: CircularProgressIndicator(
-          strokeWidth: 2,
-          color: indicatorColor,
-        ),
+        child: CircularProgressIndicator(strokeWidth: 2, color: indicatorColor),
       );
     }
     return Text(

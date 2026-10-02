@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/errors/failures.dart';
+import '../../../date_selection/domain/entities/date_range_selection.dart';
+import '../../../date_selection/presentation/date_range_label.dart';
+import '../../domain/entities/listing_filter.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/error_state_widget.dart';
-import '../../../../core/widgets/loading_skeleton.dart';
-import '../../domain/entities/listing_entity.dart';
+import '../providers/browse_providers.dart';
 import '../providers/listings_provider.dart';
-import '../widgets/listing_card.dart';
+import '../widgets/active_filter_chip.dart';
+import '../widgets/browse_filter_button.dart';
+import '../widgets/browse_filters_sheet.dart';
+import '../widgets/browse_map_view.dart';
+import '../widgets/browse_search_field.dart';
+import '../widgets/listings_grid.dart';
+import '../widgets/map_toggle_button.dart';
 
-enum _BrowseViewMode { list, map }
-
-/// Browse gear listings from Supabase.
+/// Browse gear listings: one search field, a filters button, and the results
+/// as a list, with the map one tap away. Filtering lives in the providers;
+/// this screen only arranges the pieces.
 class BrowseScreen extends ConsumerStatefulWidget {
   const BrowseScreen({super.key});
 
@@ -25,245 +31,49 @@ class BrowseScreen extends ConsumerStatefulWidget {
 }
 
 class _BrowseScreenState extends ConsumerState<BrowseScreen> {
-  static const List<String> _categories = [
-    'All',
-    'Cameras',
-    'Drones',
-    'Audio',
-    'Lighting',
-    'Camping',
-    'Sports',
-    'Instruments',
-    'Events',
-    'Tools',
-  ];
+  bool _showMap = false;
 
-  String _selectedCategory = 'All';
-  _BrowseViewMode _viewMode = _BrowseViewMode.list;
-
-  List<ListingEntity> _filterByCategory(List<ListingEntity> listings) {
-    if (_selectedCategory == 'All') {
-      return listings;
-    }
-    return listings
-        .where((listing) => listing.category == _selectedCategory)
-        .toList();
+  Future<void> _openFilters() {
+    return showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: AppColors.kColorBackground,
+      builder: (context) => const BrowseFiltersSheet(),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final listingsAsync = ref.watch(listingsProvider);
+    final filter = ref.watch(browseFilterProvider);
+    final dates = ref.watch(browseDatesProvider);
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
       backgroundColor: AppColors.kColorBackground,
       body: SafeArea(
+        bottom: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.kSpacing16,
-                AppSpacing.kSpacing16,
-                AppSpacing.kSpacing16,
-                AppSpacing.kSpacing12,
-              ),
-              child: TextField(
-                decoration: InputDecoration(
-                  hintText: 'Search gear near you...',
-                  hintStyle: AppTextStyles.kTextBodyMedium.copyWith(
-                    color: AppColors.kColorTextHint,
-                  ),
-                  prefixIcon: const Icon(
-                    Icons.search,
-                    color: AppColors.kColorTextSecondary,
-                  ),
-                  filled: true,
-                  fillColor: AppColors.kColorSurfaceVariant,
-                  border: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.kRadiusMedium),
-                    borderSide: const BorderSide(color: AppColors.kColorBorder),
-                  ),
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.kRadiusMedium),
-                    borderSide: const BorderSide(color: AppColors.kColorBorder),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppSpacing.kRadiusMedium),
-                    borderSide:
-                        const BorderSide(color: AppColors.kColorPrimary),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: AppSpacing.kSpacing12,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 40,
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.kSpacing16,
-                ),
-                itemCount: _categories.length,
-                separatorBuilder: (_, __) =>
-                    const SizedBox(width: AppSpacing.kSpacing8),
-                itemBuilder: (context, index) {
-                  final category = _categories[index];
-                  final isSelected = category == _selectedCategory;
-                  return _CategoryFilterChip(
-                    label: category,
-                    isSelected: isSelected,
-                    onTap: () => setState(() => _selectedCategory = category),
-                  );
-                },
-              ),
-            ),
-            const SizedBox(height: AppSpacing.kSpacing12),
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.kSpacing16,
-              ),
-              child: SizedBox(
-                height: 40,
-                child: SegmentedButton<String>(
-                  showSelectedIcon: false,
-                  segments: const [
-                    ButtonSegment(
-                      value: 'list',
-                      label: Text('List'),
-                      icon: Icon(Icons.list, size: 16),
-                    ),
-                    ButtonSegment(
-                      value: 'map',
-                      label: Text('Map'),
-                      icon: Icon(Icons.map_outlined, size: 16),
-                    ),
-                  ],
-                  selected: {_viewMode == _BrowseViewMode.list ? 'list' : 'map'},
-                  onSelectionChanged: (value) {
-                    setState(() {
-                      _viewMode = value.first == 'list'
-                          ? _BrowseViewMode.list
-                          : _BrowseViewMode.map;
-                    });
-                  },
-                  expandedInsets: EdgeInsets.zero,
-                  style: ButtonStyle(
-                    backgroundColor: WidgetStateProperty.resolveWith(
-                      (states) => states.contains(WidgetState.selected)
-                          ? AppColors.kColorPrimary
-                          : AppColors.kColorSurfaceVariant,
-                    ),
-                    foregroundColor: WidgetStateProperty.resolveWith(
-                      (states) => states.contains(WidgetState.selected)
-                          ? Colors.white
-                          : AppColors.kColorTextSecondary,
-                    ),
-                    iconColor: WidgetStateProperty.resolveWith(
-                      (states) => states.contains(WidgetState.selected)
-                          ? Colors.white
-                          : AppColors.kColorTextSecondary,
-                    ),
-                    side: WidgetStateProperty.all(BorderSide.none),
-                    shape: WidgetStateProperty.all(
-                      RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.kRadiusMedium,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppSpacing.kSpacing12),
+            _buildSearchRow(filter, dates),
+            if (filter.hasCategory || !dates.isEmpty)
+              _buildActiveChips(filter, dates),
             Expanded(
-              child: listingsAsync.when(
-                loading: () {
-                  if (_viewMode == _BrowseViewMode.map) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  return GridView.builder(
-                    padding: EdgeInsets.fromLTRB(
-                      AppSpacing.kSpacing16,
-                      AppSpacing.kSpacing16,
-                      AppSpacing.kSpacing16,
-                      AppSpacing.kSpacing16 + MediaQuery.paddingOf(context).bottom,
-                    ),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: AppSpacing.kSpacing12,
-                      mainAxisSpacing: AppSpacing.kSpacing12,
-                      mainAxisExtent: 290,
-                    ),
-                    itemCount: 6,
-                    itemBuilder: (context, index) {
-                      return const LoadingSkeleton(
-                        width: double.infinity,
-                        height: double.infinity,
-                      );
-                    },
-                  );
-                },
-                error: (error, _) => ErrorStateWidget(
-                  message: error is Failure
-                      ? error.message
-                      : 'Failed to load listings. Please try again.',
-                  onRetry: () => ref.invalidate(listingsProvider),
-                ),
-                data: (allListings) {
-                  final listings = _filterByCategory(allListings);
-                  if (listings.isEmpty) {
-                    if (_viewMode == _BrowseViewMode.map) {
-                      return _BrowseMapView(listings: listings);
-                    }
-                    return EmptyStateWidget(
-                      title: 'No gear listed yet',
-                      subtitle: _selectedCategory == 'All'
-                          ? 'Be the first to post gear in your area.'
-                          : 'No listings in $_selectedCategory yet.',
-                      icon: Icons.camera_alt_outlined,
-                      action: TextButton(
-                        onPressed: () => context.push('/create-listing'),
-                        child: const Text('Post your gear'),
+              child: Stack(
+                children: [
+                  _buildResults(filter, bottomInset),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: bottomInset + AppSpacing.kSpacing8,
+                    child: Center(
+                      child: MapToggleButton(
+                        showingMap: _showMap,
+                        onTap: () => setState(() => _showMap = !_showMap),
                       ),
-                    );
-                  }
-                  if (_viewMode == _BrowseViewMode.map) {
-                    return _BrowseMapView(listings: listings);
-                  }
-                  return GridView.builder(
-                    padding: EdgeInsets.fromLTRB(
-                      AppSpacing.kSpacing16,
-                      AppSpacing.kSpacing16,
-                      AppSpacing.kSpacing16,
-                      AppSpacing.kSpacing16 + MediaQuery.paddingOf(context).bottom,
                     ),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2,
-                      crossAxisSpacing: AppSpacing.kSpacing12,
-                      mainAxisSpacing: AppSpacing.kSpacing12,
-                      mainAxisExtent: 290,
-                    ),
-                    itemCount: listings.length,
-                    itemBuilder: (context, index) {
-                      final listing = listings[index];
-                      return ListingCard(
-                        listing: listing,
-                        onTap: () => context.push(
-                          '/listing/${listing.id}',
-                          extra: listing,
-                        ),
-                      );
-                    },
-                  );
-                },
+                  ),
+                ],
               ),
             ),
           ],
@@ -272,114 +82,110 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
     );
   }
 
-}
-
-class _BrowseMapView extends StatelessWidget {
-  const _BrowseMapView({required this.listings});
-
-  final List<ListingEntity> listings;
-
-  static const LatLng _sorsogonCity = LatLng(12.9734, 124.0067);
-
-  static bool _hasValidLocation(ListingEntity listing) {
-    return !(listing.lat == 0.0 && listing.lng == 0.0);
-  }
-
-  LatLng _mapCenter() {
-    final validListings =
-        listings.where(_hasValidLocation).toList();
-    if (validListings.isEmpty) {
-      return _sorsogonCity;
-    }
-
-    final latSum = validListings.fold<double>(
-      0,
-      (sum, listing) => sum + listing.lat,
-    );
-    final lngSum = validListings.fold<double>(
-      0,
-      (sum, listing) => sum + listing.lng,
-    );
-    return LatLng(
-      latSum / validListings.length,
-      lngSum / validListings.length,
-    );
-  }
-
-  Set<Marker> _buildMarkers(BuildContext context) {
-    return listings.where(_hasValidLocation).map((listing) {
-      return Marker(
-        markerId: MarkerId(listing.id),
-        position: LatLng(listing.lat, listing.lng),
-        infoWindow: InfoWindow(
-          title: listing.title,
-          snippet: '${listing.pricePerDay}/day',
-          onTap: () => context.push(
-            '/listing/${listing.id}',
-            extra: listing,
-          ),
-        ),
-      );
-    }).toSet();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final center = _mapCenter();
-    final markers = _buildMarkers(context);
-
-    return GoogleMap(
-      key: ValueKey(
-        '${center.latitude}_${center.longitude}_${markers.length}',
+  Widget _buildSearchRow(ListingFilter filter, DateRangeSelection dates) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.kSpacing16,
+        AppSpacing.kSpacing8,
+        AppSpacing.kSpacing16,
+        AppSpacing.kSpacing8,
       ),
-      initialCameraPosition: CameraPosition(
-        target: center,
-        zoom: 12,
-      ),
-      mapType: MapType.normal,
-      markers: markers,
-      zoomControlsEnabled: false,
-      myLocationButtonEnabled: false,
-    );
-  }
-}
-
-class _CategoryFilterChip extends StatelessWidget {
-  const _CategoryFilterChip({
-    required this.label,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: isSelected
-          ? AppColors.kColorPrimary
-          : AppColors.kColorSurfaceVariant,
-      borderRadius: BorderRadius.circular(AppSpacing.kRadiusMedium),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppSpacing.kRadiusMedium),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.kSpacing12,
-            vertical: AppSpacing.kSpacing8,
-          ),
-          child: Text(
-            label,
-            style: AppTextStyles.kTextLabel.copyWith(
-              color: isSelected
-                  ? AppColors.kColorSurface
-                  : AppColors.kColorTextSecondary,
+      child: Row(
+        children: [
+          Expanded(
+            child: BrowseSearchField(
+              onChanged: (value) =>
+                  ref.read(browseQueryProvider.notifier).state = value,
             ),
           ),
+          const SizedBox(width: AppSpacing.kSpacing12),
+          BrowseFilterButton(
+            hasActiveFilter: filter.hasCategory || !dates.isEmpty,
+            onTap: _openFilters,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveChips(ListingFilter filter, DateRangeSelection dates) {
+    final datesLabel = dateRangeLabel(dates);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.kSpacing16,
+        0,
+        AppSpacing.kSpacing16,
+        AppSpacing.kSpacing8,
+      ),
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: Wrap(
+          spacing: AppSpacing.kSpacing8,
+          runSpacing: AppSpacing.kSpacing8,
+          children: [
+            if (filter.hasCategory)
+              ActiveFilterChip(
+                label: filter.category,
+                onClear: () => ref.read(browseCategoryProvider.notifier).state =
+                    ListingFilter.allCategories,
+              ),
+            if (datesLabel != null)
+              ActiveFilterChip(
+                label: datesLabel,
+                onClear: () => ref.read(browseDatesProvider.notifier).state =
+                    DateRangeSelection.empty,
+              ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildResults(ListingFilter filter, double bottomInset) {
+    final bottomPadding = bottomInset + 48;
+    return ref
+        .watch(browseResultsProvider)
+        .when(
+          loading: () => _showMap
+              ? const Center(child: CircularProgressIndicator())
+              : ListingsGrid.skeleton(bottomPadding: bottomPadding),
+          error: (error, _) => ErrorStateWidget(
+            message: error is Failure
+                ? error.message
+                : 'Failed to load listings. Please try again.',
+            onRetry: () => ref.invalidate(listingsProvider),
+          ),
+          data: (listings) {
+            if (_showMap) {
+              return BrowseMapView(listings: listings);
+            }
+            if (listings.isEmpty) {
+              return _buildEmpty(filter);
+            }
+            return ListingsGrid(
+              listings: listings,
+              bottomPadding: bottomPadding,
+            );
+          },
+        );
+  }
+
+  Widget _buildEmpty(ListingFilter filter) {
+    final hasSearch = filter.query.trim().isNotEmpty;
+    return EmptyStateWidget(
+      title: hasSearch ? 'No matches' : 'No gear listed yet',
+      subtitle: hasSearch
+          ? 'Try a different search.'
+          : filter.hasCategory
+          ? 'No listings in ${filter.category} yet.'
+          : 'Be the first to post gear in your area.',
+      icon: Icons.camera_alt_outlined,
+      action: hasSearch
+          ? null
+          : TextButton(
+              onPressed: () => context.push('/create-listing'),
+              child: const Text('Post your gear'),
+            ),
     );
   }
 }

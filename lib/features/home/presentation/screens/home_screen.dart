@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../listings/presentation/providers/browse_providers.dart';
 import '../../../listings/presentation/providers/listings_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -20,29 +21,15 @@ class HomeScreen extends ConsumerWidget {
     _CategoryItem('Camping', Icons.cabin_outlined),
   ];
 
-  static String _filipinoGreeting() {
-    final hour = DateTime.now().hour;
-    if (hour < 12) {
-      return 'Magandang umaga';
-    }
-    if (hour < 18) {
-      return 'Magandang hapon';
-    }
-    return 'Magandang gabi';
-  }
-
-  static String _greetingLine(String? fullName) {
-    final trimmed = fullName?.trim();
-    if (trimmed == null || trimmed.isEmpty) {
-      return 'Hi there 👋';
-    }
-    return 'Hi, $trimmed 👋';
+  void _showComingSoon(BuildContext context) {
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Coming soon!')));
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final listingsAsync = ref.watch(listingsProvider);
-    final greetingAsync = ref.watch(homeUserGreetingProvider);
     final topHostsAsync = ref.watch(topRatedHostsProvider);
 
     return Scaffold(
@@ -53,171 +40,40 @@ class HomeScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Container(
-                  color: AppColors.kColorPrimary,
-                  padding: const EdgeInsets.fromLTRB(
-                    AppSpacing.kSpacing20,
-                    AppSpacing.kSpacing20,
-                    AppSpacing.kSpacing20,
-                    56,
-                  ),
-                  child: SafeArea(
-                    bottom: false,
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            SafeArea(
+              bottom: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.kSpacing20,
+                  AppSpacing.kSpacing8,
+                  AppSpacing.kSpacing20,
+                  0,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
                       children: [
                         Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                _filipinoGreeting(),
-                                style: AppTextStyles.kTextBodySmall.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.65),
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.kSpacing4),
-                              greetingAsync.when(
-                                loading: () => Text(
-                                  'Hi there 👋',
-                                  style: AppTextStyles.kTextHeading3.copyWith(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                error: (_, __) => Text(
-                                  'Hi there 👋',
-                                  style: AppTextStyles.kTextHeading3.copyWith(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                data: (fullName) => Text(
-                                  _greetingLine(fullName),
-                                  style: AppTextStyles.kTextHeading3.copyWith(
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.kSpacing8),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                  vertical: 4,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.14),
-                                  borderRadius: BorderRadius.circular(
-                                    AppSpacing.kRadiusCircular,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.location_on_outlined,
-                                      color: Colors.white,
-                                      size: 12,
-                                    ),
-                                    const SizedBox(width: AppSpacing.kSpacing4),
-                                    // TODO: Replace with real device location or user-set preference in a future iteration
-                                    Text(
-                                      'Sorsogon City',
-                                      style: AppTextStyles.kTextCaption
-                                          .copyWith(
-                                            color: Colors.white,
-                                            fontSize: 11,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                          child: _LocationPicker(
+                            onTap: () => _showComingSoon(context),
                           ),
                         ),
-                        GestureDetector(
+                        _NotificationsButton(
                           onTap: () => context.push('/notifications'),
-                          child: Stack(
-                            clipBehavior: Clip.none,
-                            children: [
-                              Container(
-                                width: 38,
-                                height: 38,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withValues(alpha: 0.14),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.notifications_outlined,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              // TODO: Wire to real unread notification count once notification system is built
-                              Positioned(
-                                right: 2,
-                                top: 2,
-                                child: Container(
-                                  width: 8,
-                                  height: 8,
-                                  decoration: const BoxDecoration(
-                                    color: AppColors.kColorAccent,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
                         ),
                       ],
                     ),
-                  ),
+                    const SizedBox(height: AppSpacing.kSpacing16),
+                    _SearchPill(onTap: onBrowseTap),
+                  ],
                 ),
-                Positioned(
-                  left: AppSpacing.kSpacing16,
-                  right: AppSpacing.kSpacing16,
-                  bottom: -38,
-                  child: GestureDetector(
-                    onTap: onBrowseTap,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: AppSpacing.kSpacing16,
-                        vertical: 13,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.kColorSurface,
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.kRadiusLarge,
-                        ),
-                        border: Border.all(
-                          color: AppColors.kColorBorder,
-                          width: 0.5,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.search,
-                            color: AppColors.kColorTextSecondary,
-                          ),
-                          const SizedBox(width: AppSpacing.kSpacing12),
-                          Text(
-                            'Search cameras, drones, gear...',
-                            style: AppTextStyles.kTextBodyMedium.copyWith(
-                              color: AppColors.kColorTextHint,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppSpacing.kSpacing16,
-                54,
+                AppSpacing.kSpacing24,
                 AppSpacing.kSpacing16,
                 AppSpacing.kSpacing16,
               ),
@@ -242,107 +98,44 @@ class HomeScreen extends ConsumerWidget {
                                 ? 0
                                 : AppSpacing.kSpacing16,
                           ),
-                          child: SizedBox(
-                            width: 68,
-                            child: Column(
-                              children: [
-                                Container(
-                                  width: 52,
-                                  height: 52,
-                                  decoration: BoxDecoration(
-                                    color: AppColors.kColorPrimaryFaded,
-                                    borderRadius: BorderRadius.circular(16),
+                          child: GestureDetector(
+                            onTap: () {
+                              ref.read(browseCategoryProvider.notifier).state =
+                                  item.label;
+                              onBrowseTap();
+                            },
+                            behavior: HitTestBehavior.opaque,
+                            child: SizedBox(
+                              width: 68,
+                              child: Column(
+                                children: [
+                                  Container(
+                                    width: 52,
+                                    height: 52,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.kColorPrimaryFaded,
+                                      borderRadius: BorderRadius.circular(16),
+                                    ),
+                                    child: Icon(
+                                      item.icon,
+                                      color: AppColors.kColorPrimary,
+                                      size: 22,
+                                    ),
                                   ),
-                                  child: Icon(
-                                    item.icon,
-                                    color: AppColors.kColorPrimary,
-                                    size: 22,
+                                  const SizedBox(height: AppSpacing.kSpacing8),
+                                  Text(
+                                    item.label,
+                                    style: AppTextStyles.kTextCaption.copyWith(
+                                      color: AppColors.kColorTextSecondary,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                ),
-                                const SizedBox(height: AppSpacing.kSpacing8),
-                                Text(
-                                  item.label,
-                                  style: AppTextStyles.kTextCaption.copyWith(
-                                    color: AppColors.kColorTextSecondary,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         );
                       },
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.kSpacing24),
-                  GestureDetector(
-                    onTap: () => context.push('/create-listing'),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSpacing.kSpacing20),
-                      decoration: BoxDecoration(
-                        color: AppColors.kColorPrimary,
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.kRadiusLarge,
-                        ),
-                      ),
-                      child: Stack(
-                        children: [
-                          Positioned(
-                            right: 0,
-                            bottom: 0,
-                            child: Icon(
-                              Icons.camera_alt,
-                              size: 80,
-                              color: Colors.white.withValues(alpha: 0.10),
-                            ),
-                          ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'FOR GEAR OWNERS',
-                                style: AppTextStyles.kTextCaption.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                  fontSize: 11,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.kSpacing8),
-                              Text(
-                                'Your idle gear could earn\n₱500+ this week',
-                                style: AppTextStyles.kTextHeading4.copyWith(
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: AppSpacing.kSpacing8),
-                              Text(
-                                'Join hosts already earning\nin Bicol',
-                                style: AppTextStyles.kTextBodySmall.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.7),
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: AppSpacing.kSpacing16,
-                                  vertical: AppSpacing.kSpacing8,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: AppColors.kColorAccent,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Text(
-                                  'List your gear',
-                                  style: AppTextStyles.kTextButton.copyWith(
-                                    color: AppColors.kColorOnAccent,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
                     ),
                   ),
                   const SizedBox(height: AppSpacing.kSpacing24),
@@ -699,63 +492,154 @@ class HomeScreen extends ConsumerWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: AppSpacing.kSpacing24),
-                  GestureDetector(
-                    onTap: () => context.push('/create-listing'),
-                    child: Container(
-                      padding: const EdgeInsets.all(AppSpacing.kSpacing16),
-                      decoration: BoxDecoration(
-                        color: AppColors.kColorAccentLight,
-                        borderRadius: BorderRadius.circular(
-                          AppSpacing.kRadiusLarge,
-                        ),
-                        border: Border.all(
-                          color: AppColors.kColorAccent.withValues(alpha: 0.3),
-                          width: 0.5,
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          Container(
-                            width: 42,
-                            height: 42,
-                            decoration: BoxDecoration(
-                              color: AppColors.kColorAccent,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Icon(
-                              Icons.add,
-                              color: AppColors.kColorOnAccent,
-                              size: 19,
-                            ),
-                          ),
-                          const SizedBox(width: AppSpacing.kSpacing12),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Got gear sitting idle?',
-                                style: AppTextStyles.kTextLabel.copyWith(
-                                  color: AppColors.kColorTextPrimary,
-                                ),
-                              ),
-                              Text(
-                                'List it in under 5 minutes',
-                                style: AppTextStyles.kTextCaption.copyWith(
-                                  color: AppColors.kColorTextSecondary,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
                   const SizedBox(height: AppSpacing.kSpacing16),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Location" label over the current city, with a chevron for a future picker.
+class _LocationPicker extends StatelessWidget {
+  const _LocationPicker({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Change location, Sorsogon City',
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Location',
+              style: AppTextStyles.kTextCaption.copyWith(
+                color: AppColors.kColorTextSecondary,
+              ),
+            ),
+            const SizedBox(height: AppSpacing.kSpacing2),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.location_on_outlined,
+                  size: AppSpacing.kIconMedium,
+                  color: AppColors.kColorPrimary,
+                ),
+                const SizedBox(width: AppSpacing.kSpacing4),
+                // TODO: Replace with real device location or user-set preference in a future iteration
+                Text('Sorsogon City', style: AppTextStyles.kTextHeading4),
+                const SizedBox(width: AppSpacing.kSpacing4),
+                const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: AppSpacing.kIconMedium,
+                  color: AppColors.kColorTextSecondary,
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Round bell button with an unread dot.
+class _NotificationsButton extends StatelessWidget {
+  const _NotificationsButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  static const double _kSize = 48;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Notifications',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: _kSize,
+              height: _kSize,
+              decoration: BoxDecoration(
+                color: AppColors.kColorSurface,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.kColorBorder),
+              ),
+              child: const Icon(
+                Icons.notifications_outlined,
+                color: AppColors.kColorTextPrimary,
+              ),
+            ),
+            // TODO: Wire to real unread notification count once notification system is built
+            Positioned(
+              right: 12,
+              top: 12,
+              child: Container(
+                width: 8,
+                height: 8,
+                decoration: const BoxDecoration(
+                  color: AppColors.kColorAccent,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Tappable search field that opens Browse.
+class _SearchPill extends StatelessWidget {
+  const _SearchPill({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Search cameras, drones, gear',
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.kSpacing16,
+            vertical: 13,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.kColorSurface,
+            borderRadius: BorderRadius.circular(AppSpacing.kRadiusCircular),
+            border: Border.all(color: AppColors.kColorBorder),
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.search, color: AppColors.kColorTextSecondary),
+              const SizedBox(width: AppSpacing.kSpacing12),
+              Text(
+                'Search cameras, drones, gear...',
+                style: AppTextStyles.kTextBodyMedium.copyWith(
+                  color: AppColors.kColorTextHint,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
