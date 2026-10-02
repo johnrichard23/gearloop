@@ -107,6 +107,9 @@ inlined:
 - Never install new packages, or change folder structure, without being asked.
 - Never use deprecated Flutter APIs, `dynamic` in Dart, or `any` in TypeScript.
 - Never leave unresolved TODOs. Never hallucinate function/package APIs — check docs first.
+- Before designing or building UI, consult the reference skills listed in `CONSTITUTION.md` §15
+  (currently `/anthropic-skills:flutter-app-design-skill`, `/anthropic-skills:canvas-design`,
+  `/anthropic-skills:swiftui-app-design-skill`) and say which you used.
 - Take inspiration from existing apps and projects, never copy them: no copied layouts, assets or
   copy, and never name a reference product in repo files. See `CONSTITUTION.md` §14.
 

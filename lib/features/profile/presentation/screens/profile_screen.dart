@@ -6,6 +6,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
+import '../../../../core/widgets/sign_in_prompt.dart';
+import '../../../auth/presentation/providers/session_provider.dart';
+import '../../../auth/data/repositories/auth_repository_impl.dart';
 import '../../../listings/domain/entities/listing_entity.dart';
 import '../../../listings/presentation/providers/listings_provider.dart';
 import '../../domain/entities/user_profile_entity.dart';
@@ -63,8 +66,7 @@ const List<_DummyReview> _dummyReviews = [
   _DummyReview(
     reviewerName: 'Leo M.',
     rating: 4,
-    comment:
-        'Good experience overall. Gear was as described. Will rent again.',
+    comment: 'Good experience overall. Gear was as described. Will rent again.',
     date: 'April 28, 2026',
     gearRented: 'Sony A7III Camera Body',
   ),
@@ -75,12 +77,12 @@ class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   void _showComingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Coming soon!')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Coming soon!')));
   }
 
-  Future<void> _showLogoutDialog(BuildContext context) async {
+  Future<void> _showLogoutDialog(BuildContext context, WidgetRef ref) async {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -103,13 +105,32 @@ class ProfileScreen extends ConsumerWidget {
         ],
       ),
     );
-    if (confirmed == true && context.mounted) {
-      context.go('/login');
+    if (confirmed != true) {
+      return;
     }
+    final signedOut = await ref.read(authProvider.notifier).signOut();
+    if (!context.mounted) {
+      return;
+    }
+    if (signedOut) {
+      context.go('/login');
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          ref.read(authProvider).errorMessage ??
+              'Could not log out. Please try again.',
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(isSignedInProvider)) {
+      return _GuestProfile(onHelp: () => _showComingSoon(context));
+    }
     final listingsAsync = ref.watch(listingsProvider);
     final currentUserId = Supabase.instance.client.auth.currentUser?.id;
     final myListings = listingsAsync.maybeWhen(
@@ -122,6 +143,7 @@ class ProfileScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.kColorBackground,
       body: SingleChildScrollView(
+        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -141,9 +163,48 @@ class ProfileScreen extends ConsumerWidget {
               onNotifications: () => _showComingSoon(context),
               onPrivacy: () => _showComingSoon(context),
               onHelp: () => _showComingSoon(context),
-              onLogout: () => _showLogoutDialog(context),
+              onLogout: () => _showLogoutDialog(context, ref),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Profile for a guest: no personal sections, just a prompt to log in or sign
+/// up plus the settings that don't need an account.
+class _GuestProfile extends StatelessWidget {
+  const _GuestProfile({required this.onHelp});
+
+  final VoidCallback onHelp;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppColors.kColorBackground,
+      body: SafeArea(
+        child: SingleChildScrollView(
+          child: Column(
+            children: [
+              const SizedBox(height: AppSpacing.kSpacing32),
+              const SignInPrompt(
+                icon: Icons.person_outline,
+                title: 'Log in to your profile',
+                message:
+                    'Log in or sign up to manage your listings, '
+                    'reviews and account settings.',
+              ),
+              Padding(
+                padding: const EdgeInsets.all(AppSpacing.kSpacing16),
+                child: _SettingsTile(
+                  icon: Icons.help_outline,
+                  title: 'Help & Support',
+                  onTap: onHelp,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -174,8 +235,9 @@ class _ProfileHeader extends StatelessWidget {
           CircleAvatar(
             radius: 40,
             backgroundColor: AppColors.kColorPrimaryLight,
-            backgroundImage:
-                user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
+            backgroundImage: user.avatarUrl != null
+                ? NetworkImage(user.avatarUrl!)
+                : null,
             child: user.avatarUrl == null
                 ? Text(
                     _initials,
@@ -203,20 +265,14 @@ class _ProfileHeader extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              _StatBox(
-                value: '${user.totalRentals}',
-                label: 'Rentals',
-              ),
+              _StatBox(value: '${user.totalRentals}', label: 'Rentals'),
               _VerticalDivider(),
               _StatBox(
                 value: '${user.ratingAvg.toStringAsFixed(1)} ⭐',
                 label: 'Rating',
               ),
               _VerticalDivider(),
-              _StatBox(
-                value: '${user.totalListings}',
-                label: 'Listings',
-              ),
+              _StatBox(value: '${user.totalListings}', label: 'Listings'),
             ],
           ),
         ],
@@ -317,8 +373,9 @@ class _VerificationRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color =
-        isVerified ? AppColors.kColorSuccess : AppColors.kColorTextHint;
+    final color = isVerified
+        ? AppColors.kColorSuccess
+        : AppColors.kColorTextHint;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.kSpacing8),

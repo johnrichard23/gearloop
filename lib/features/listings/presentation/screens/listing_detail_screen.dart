@@ -12,10 +12,7 @@ import '../../domain/entities/listing_entity.dart';
 
 /// Gear listing detail (dummy pricing until booking flow exists).
 class ListingDetailScreen extends StatelessWidget {
-  const ListingDetailScreen({
-    required this.listing,
-    super.key,
-  });
+  const ListingDetailScreen({required this.listing, super.key});
 
   final ListingEntity listing;
 
@@ -29,8 +26,7 @@ class ListingDetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final currentUserId =
-        Supabase.instance.client.auth.currentUser?.id;
+    final currentUserId = Supabase.instance.client.auth.currentUser?.id;
     final isOwnListing = currentUserId == listing.hostId;
 
     return Scaffold(
@@ -88,10 +84,7 @@ class ListingDetailScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          listing.title,
-                          style: AppTextStyles.kTextHeading2,
-                        ),
+                        Text(listing.title, style: AppTextStyles.kTextHeading2),
                         const SizedBox(height: AppSpacing.kSpacing8),
                         _CategoryChip(label: listing.category),
                         const SizedBox(height: AppSpacing.kSpacing16),
@@ -141,10 +134,7 @@ class ListingDetailScreen extends StatelessWidget {
             _BottomBar(
               pricePerDay: listing.pricePerDay,
               onBookNow: () {
-                context.push(
-                  '/booking-request',
-                  extra: listing,
-                );
+                context.push('/booking-request', extra: listing);
               },
             ),
         ],
@@ -170,6 +160,38 @@ class _PickupLocationSectionState extends State<_PickupLocationSection> {
   final _bookingsRepository = BookingsRepositoryImpl();
   bool _isLoading = true;
   bool _hasConfirmedBooking = false;
+
+  /// The Google Maps view starts the Maps SDK the first time one is created,
+  /// which can stall the UI for seconds. It waits for the page transition to
+  /// finish so the screen slides in and shows its content first.
+  bool _mapReady = false;
+  Animation<double>? _routeAnimation;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_mapReady || _routeAnimation != null) {
+      return;
+    }
+    final animation = ModalRoute.of(context)?.animation;
+    if (animation == null || animation.isCompleted) {
+      _mapReady = true;
+      return;
+    }
+    _routeAnimation = animation..addStatusListener(_onRouteAnimationStatus);
+  }
+
+  void _onRouteAnimationStatus(AnimationStatus status) {
+    if (status == AnimationStatus.completed && mounted) {
+      setState(() => _mapReady = true);
+    }
+  }
+
+  @override
+  void dispose() {
+    _routeAnimation?.removeStatusListener(_onRouteAnimationStatus);
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -204,11 +226,9 @@ class _PickupLocationSectionState extends State<_PickupLocationSection> {
     });
   }
 
-  bool get _showExactLocation =>
-      widget.isOwnListing || _hasConfirmedBooking;
+  bool get _showExactLocation => widget.isOwnListing || _hasConfirmedBooking;
 
-  LatLng get _pickupLatLng =>
-      LatLng(widget.listing.lat, widget.listing.lng);
+  LatLng get _pickupLatLng => LatLng(widget.listing.lat, widget.listing.lng);
 
   void _openFullscreenMap() {
     showDialog<void>(
@@ -245,10 +265,7 @@ class _PickupLocationSectionState extends State<_PickupLocationSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Pickup Location',
-          style: AppTextStyles.kTextHeading4,
-        ),
+        Text('Pickup Location', style: AppTextStyles.kTextHeading4),
         const SizedBox(height: AppSpacing.kSpacing8),
         Row(
           children: [
@@ -271,7 +288,7 @@ class _PickupLocationSectionState extends State<_PickupLocationSection> {
           _showExactLocation
               ? 'Exact pickup location'
               : 'General area — exact location shown after '
-                  'booking is confirmed',
+                    'booking is confirmed',
           style: AppTextStyles.kTextBodySmall.copyWith(
             color: AppColors.kColorTextSecondary,
           ),
@@ -282,57 +299,55 @@ class _PickupLocationSectionState extends State<_PickupLocationSection> {
           child: SizedBox(
             height: 180,
             width: double.infinity,
-            child: _isLoading
+            child: _isLoading || !_mapReady
                 ? const ColoredBox(
                     color: AppColors.kColorSurfaceVariant,
                     child: Center(child: CircularProgressIndicator()),
                   )
                 : _showExactLocation
-                    ? GoogleMap(
-                        initialCameraPosition: CameraPosition(
-                          target: _pickupLatLng,
-                          zoom: 15,
-                        ),
-                        mapType: MapType.normal,
-                        markers: {
-                          Marker(
-                            markerId: const MarkerId('pickup'),
-                            position: _pickupLatLng,
-                          ),
-                        },
-                        zoomControlsEnabled: false,
-                        onTap: (_) => _openFullscreenMap(),
-                      )
-                    : GoogleMap(
-                        initialCameraPosition: CameraPosition(
-                          target: _pickupLatLng,
-                          zoom: 13,
-                        ),
-                        mapType: MapType.normal,
-                        onMapCreated: (controller) {
-                          debugPrint(
-                            'GENERAL AREA MAP CREATED SUCCESSFULLY',
-                          );
-                          debugPrint(
-                            'CAMERA TARGET: lat=${_pickupLatLng.latitude}, lng=${_pickupLatLng.longitude}',
-                          );
-                        },
-                        circles: {
-                          Circle(
-                            circleId: const CircleId('pickup_area'),
-                            center: _pickupLatLng,
-                            radius: 800,
-                            fillColor: AppColors.kColorPrimary.withValues(
-                              alpha: 0.15,
-                            ),
-                            strokeColor: AppColors.kColorPrimary.withValues(
-                              alpha: 0.4,
-                            ),
-                            strokeWidth: 1,
-                          ),
-                        },
-                        zoomControlsEnabled: false,
+                ? GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: _pickupLatLng,
+                      zoom: 15,
+                    ),
+                    mapType: MapType.normal,
+                    markers: {
+                      Marker(
+                        markerId: const MarkerId('pickup'),
+                        position: _pickupLatLng,
                       ),
+                    },
+                    zoomControlsEnabled: false,
+                    onTap: (_) => _openFullscreenMap(),
+                  )
+                : GoogleMap(
+                    initialCameraPosition: CameraPosition(
+                      target: _pickupLatLng,
+                      zoom: 13,
+                    ),
+                    mapType: MapType.normal,
+                    onMapCreated: (controller) {
+                      debugPrint('GENERAL AREA MAP CREATED SUCCESSFULLY');
+                      debugPrint(
+                        'CAMERA TARGET: lat=${_pickupLatLng.latitude}, lng=${_pickupLatLng.longitude}',
+                      );
+                    },
+                    circles: {
+                      Circle(
+                        circleId: const CircleId('pickup_area'),
+                        center: _pickupLatLng,
+                        radius: 800,
+                        fillColor: AppColors.kColorPrimary.withValues(
+                          alpha: 0.15,
+                        ),
+                        strokeColor: AppColors.kColorPrimary.withValues(
+                          alpha: 0.4,
+                        ),
+                        strokeWidth: 1,
+                      ),
+                    },
+                    zoomControlsEnabled: false,
+                  ),
           ),
         ),
       ],
@@ -341,10 +356,7 @@ class _PickupLocationSectionState extends State<_PickupLocationSection> {
 }
 
 class _PhotoSection extends StatefulWidget {
-  const _PhotoSection({
-    required this.photoUrls,
-    required this.onBack,
-  });
+  const _PhotoSection({required this.photoUrls, required this.onBack});
 
   final List<String> photoUrls;
   final VoidCallback onBack;
@@ -463,9 +475,7 @@ class _DetailNetworkImage extends StatelessWidget {
         if (loadingProgress == null) {
           return child;
         }
-        return const ColoredBox(
-          color: AppColors.kColorSurfaceVariant,
-        );
+        return const ColoredBox(color: AppColors.kColorSurfaceVariant);
       },
       errorBuilder: (context, error, stackTrace) {
         return const ColoredBox(
@@ -548,8 +558,9 @@ class _HostInfoRow extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.kColorPrimaryFaded,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.kRadiusSmall),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.kRadiusSmall,
+                        ),
                       ),
                       child: Text(
                         'Verified ✓',
@@ -642,10 +653,7 @@ class _PricingRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(label, style: AppTextStyles.kTextBodyMedium),
-        Text(
-          value,
-          style: valueStyle ?? AppTextStyles.kTextBodyMedium,
-        ),
+        Text(value, style: valueStyle ?? AppTextStyles.kTextBodyMedium),
       ],
     );
   }
@@ -684,11 +692,7 @@ class _OwnListingBottomBar extends StatelessWidget {
             ),
             SizedBox(
               width: 100,
-              child: AppButton(
-                label: 'Edit',
-                isOutlined: true,
-                onTap: onEdit,
-              ),
+              child: AppButton(label: 'Edit', isOutlined: true, onTap: onEdit),
             ),
           ],
         ),
@@ -698,10 +702,7 @@ class _OwnListingBottomBar extends StatelessWidget {
 }
 
 class _BottomBar extends StatelessWidget {
-  const _BottomBar({
-    required this.pricePerDay,
-    required this.onBookNow,
-  });
+  const _BottomBar({required this.pricePerDay, required this.onBookNow});
 
   final String pricePerDay;
   final VoidCallback onBookNow;
@@ -729,10 +730,7 @@ class _BottomBar extends StatelessWidget {
             const Spacer(),
             SizedBox(
               width: 140,
-              child: AppButton(
-                label: 'Book Now',
-                onTap: onBookNow,
-              ),
+              child: AppButton(label: 'Book Now', onTap: onBookNow),
             ),
           ],
         ),

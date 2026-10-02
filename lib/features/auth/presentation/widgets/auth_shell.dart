@@ -110,17 +110,25 @@ class _AuthShellState extends State<AuthShell>
                 child: AnimatedBuilder(
                   animation: _entrance,
                   builder: (context, _) => Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: widget.footer == null
+                        ? MainAxisAlignment.start
+                        : MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      _buildContent(),
-                      if (widget.footer != null)
+                      _buildTopRow(),
+                      // With a footer the slack on tall screens is shared above
+                      // and below the form, not dumped above the footer alone.
+                      if (widget.footer == null)
+                        _buildBody()
+                      else ...[
+                        _buildBody(),
                         Padding(
                           padding: const EdgeInsets.only(
                             top: AppSpacing.kSpacing16,
                           ),
                           child: _staged(0.3, 1, Center(child: widget.footer)),
                         ),
+                      ],
                     ],
                   ),
                 ),
@@ -132,11 +140,10 @@ class _AuthShellState extends State<AuthShell>
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildBody() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _buildTopRow(),
         const SizedBox(height: AppSpacing.kSpacing32),
         _staged(
           0,

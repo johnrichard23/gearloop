@@ -8,10 +8,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../listings/presentation/providers/listings_provider.dart';
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({
-    required this.onBrowseTap,
-    super.key,
-  });
+  const HomeScreen({required this.onBrowseTap, super.key});
 
   final VoidCallback onBrowseTap;
 
@@ -51,6 +48,8 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: AppColors.kColorBackground,
       body: SingleChildScrollView(
+        // The floating tab bar overlays the bottom of the screen.
+        padding: EdgeInsets.only(bottom: MediaQuery.paddingOf(context).bottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -125,10 +124,11 @@ class HomeScreen extends ConsumerWidget {
                                     // TODO: Replace with real device location or user-set preference in a future iteration
                                     Text(
                                       'Sorsogon City',
-                                      style: AppTextStyles.kTextCaption.copyWith(
-                                        color: Colors.white,
-                                        fontSize: 11,
-                                      ),
+                                      style: AppTextStyles.kTextCaption
+                                          .copyWith(
+                                            color: Colors.white,
+                                            fontSize: 11,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -186,8 +186,9 @@ class HomeScreen extends ConsumerWidget {
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.kColorSurface,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.kRadiusLarge),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.kRadiusLarge,
+                        ),
                         border: Border.all(
                           color: AppColors.kColorBorder,
                           width: 0.5,
@@ -280,8 +281,9 @@ class HomeScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(AppSpacing.kSpacing20),
                       decoration: BoxDecoration(
                         color: AppColors.kColorPrimary,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.kRadiusLarge),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.kRadiusLarge,
+                        ),
                       ),
                       child: Stack(
                         children: [
@@ -365,13 +367,14 @@ class HomeScreen extends ConsumerWidget {
                   SizedBox(
                     height: 180,
                     child: listingsAsync.when(
-                      loading: () => const Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      loading: () =>
+                          const Center(child: CircularProgressIndicator()),
                       error: (_, __) => Center(
                         child: TextButton(
                           onPressed: () => ref.invalidate(listingsProvider),
-                          child: const Text('Could not load listings. Tap to retry.'),
+                          child: const Text(
+                            'Could not load listings. Tap to retry.',
+                          ),
                         ),
                       ),
                       data: (nearbyListings) {
@@ -385,8 +388,7 @@ class HomeScreen extends ConsumerWidget {
                             ),
                           );
                         }
-                        final previewListings =
-                            nearbyListings.take(5).toList();
+                        final previewListings = nearbyListings.take(5).toList();
                         return ListView.builder(
                           scrollDirection: Axis.horizontal,
                           itemCount: previewListings.length,
@@ -424,61 +426,60 @@ class HomeScreen extends ConsumerWidget {
                                           ClipRRect(
                                             borderRadius:
                                                 const BorderRadius.vertical(
-                                              top: Radius.circular(
-                                                AppSpacing.kRadiusLarge,
-                                              ),
-                                            ),
+                                                  top: Radius.circular(
+                                                    AppSpacing.kRadiusLarge,
+                                                  ),
+                                                ),
                                             child: SizedBox(
                                               height: 90,
                                               width: double.infinity,
-                                              child: listing
-                                                      .photoUrls.isNotEmpty
+                                              child:
+                                                  listing.photoUrls.isNotEmpty
                                                   ? Image.network(
                                                       listing.photoUrls.first,
                                                       fit: BoxFit.cover,
                                                       width: double.infinity,
                                                       height: 90,
-                                                      loadingBuilder: (
-                                                        context,
-                                                        child,
-                                                        progress,
-                                                      ) =>
-                                                          progress == null
-                                                              ? child
-                                                              : Container(
-                                                                  color: AppColors
-                                                                      .kColorSurfaceVariant,
-                                                                  child:
-                                                                      const Center(
-                                                                    child:
-                                                                        CircularProgressIndicator(
+                                                      loadingBuilder:
+                                                          (
+                                                            context,
+                                                            child,
+                                                            progress,
+                                                          ) => progress == null
+                                                          ? child
+                                                          : Container(
+                                                              color: AppColors
+                                                                  .kColorSurfaceVariant,
+                                                              child: const Center(
+                                                                child:
+                                                                    CircularProgressIndicator(
                                                                       strokeWidth:
                                                                           2,
                                                                     ),
-                                                                  ),
-                                                                ),
-                                                      errorBuilder: (
-                                                        context,
-                                                        error,
-                                                        stackTrace,
-                                                      ) =>
-                                                          Container(
-                                                        color: AppColors
-                                                            .kColorSurfaceVariant,
-                                                        child: const Icon(
-                                                          Icons
-                                                              .broken_image_outlined,
-                                                          color: AppColors
-                                                              .kColorTextHint,
-                                                        ),
-                                                      ),
+                                                              ),
+                                                            ),
+                                                      errorBuilder:
+                                                          (
+                                                            context,
+                                                            error,
+                                                            stackTrace,
+                                                          ) => Container(
+                                                            color: AppColors
+                                                                .kColorSurfaceVariant,
+                                                            child: const Icon(
+                                                              Icons
+                                                                  .broken_image_outlined,
+                                                              color: AppColors
+                                                                  .kColorTextHint,
+                                                            ),
+                                                          ),
                                                     )
                                                   : Container(
                                                       decoration:
                                                           const BoxDecoration(
-                                                        color: AppColors
-                                                            .kColorPrimaryFaded,
-                                                      ),
+                                                            color: AppColors
+                                                                .kColorPrimaryFaded,
+                                                          ),
                                                       child: const Center(
                                                         child: Icon(
                                                           Icons
@@ -498,11 +499,12 @@ class HomeScreen extends ConsumerWidget {
                                               child: Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
-                                                  horizontal: 6,
-                                                  vertical: 2,
-                                                ),
+                                                      horizontal: 6,
+                                                      vertical: 2,
+                                                    ),
                                                 decoration: BoxDecoration(
-                                                  color: AppColors.kColorSurface,
+                                                  color:
+                                                      AppColors.kColorSurface,
                                                   borderRadius:
                                                       BorderRadius.circular(6),
                                                 ),
@@ -520,10 +522,10 @@ class HomeScreen extends ConsumerWidget {
                                                       style: AppTextStyles
                                                           .kTextCaption
                                                           .copyWith(
-                                                        color: AppColors
-                                                            .kColorSuccess,
-                                                        fontSize: 8.5,
-                                                      ),
+                                                            color: AppColors
+                                                                .kColorSuccess,
+                                                            fontSize: 8.5,
+                                                          ),
                                                     ),
                                                   ],
                                                 ),
@@ -561,7 +563,8 @@ class HomeScreen extends ConsumerWidget {
                                                 const Spacer(),
                                                 const Icon(
                                                   Icons.star,
-                                                  color: AppColors.kColorWarning,
+                                                  color:
+                                                      AppColors.kColorWarning,
                                                   size: 10,
                                                 ),
                                                 const SizedBox(width: 3),
@@ -571,10 +574,10 @@ class HomeScreen extends ConsumerWidget {
                                                   style: AppTextStyles
                                                       .kTextCaption
                                                       .copyWith(
-                                                    color: AppColors
-                                                        .kColorTextSecondary,
-                                                    fontSize: 10.5,
-                                                  ),
+                                                        color: AppColors
+                                                            .kColorTextSecondary,
+                                                        fontSize: 10.5,
+                                                      ),
                                                 ),
                                               ],
                                             ),
@@ -595,9 +598,7 @@ class HomeScreen extends ConsumerWidget {
                   topHostsAsync.when(
                     loading: () => const SizedBox(
                       height: 90,
-                      child: Center(
-                        child: CircularProgressIndicator(),
-                      ),
+                      child: Center(child: CircularProgressIndicator()),
                     ),
                     error: (_, __) => const SizedBox.shrink(),
                     data: (topHosts) {
@@ -649,8 +650,8 @@ class HomeScreen extends ConsumerWidget {
                                             host.initials,
                                             style: AppTextStyles.kTextHeading4
                                                 .copyWith(
-                                              fontWeight: FontWeight.w600,
-                                            ),
+                                                  fontWeight: FontWeight.w600,
+                                                ),
                                           ),
                                         ),
                                         const SizedBox(
@@ -660,9 +661,10 @@ class HomeScreen extends ConsumerWidget {
                                           host.name,
                                           style: AppTextStyles.kTextCaption
                                               .copyWith(
-                                            color: AppColors.kColorTextPrimary,
-                                            fontSize: 10.5,
-                                          ),
+                                                color:
+                                                    AppColors.kColorTextPrimary,
+                                                fontSize: 10.5,
+                                              ),
                                           textAlign: TextAlign.center,
                                         ),
                                         Row(
@@ -679,10 +681,10 @@ class HomeScreen extends ConsumerWidget {
                                               host.rating.toStringAsFixed(1),
                                               style: AppTextStyles.kTextCaption
                                                   .copyWith(
-                                                color: AppColors
-                                                    .kColorTextSecondary,
-                                                fontSize: 10,
-                                              ),
+                                                    color: AppColors
+                                                        .kColorTextSecondary,
+                                                    fontSize: 10,
+                                                  ),
                                             ),
                                           ],
                                         ),
@@ -704,8 +706,9 @@ class HomeScreen extends ConsumerWidget {
                       padding: const EdgeInsets.all(AppSpacing.kSpacing16),
                       decoration: BoxDecoration(
                         color: AppColors.kColorAccentLight,
-                        borderRadius:
-                            BorderRadius.circular(AppSpacing.kRadiusLarge),
+                        borderRadius: BorderRadius.circular(
+                          AppSpacing.kRadiusLarge,
+                        ),
                         border: Border.all(
                           color: AppColors.kColorAccent.withValues(alpha: 0.3),
                           width: 0.5,

@@ -1,6 +1,9 @@
+import 'package:cupertino_native_better/cupertino_native_better.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../network/supabase_client.dart';
+import 'pending_route.dart';
 import '../../features/auth/presentation/screens/forgot_password_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/auth/presentation/screens/register_screen.dart';
@@ -20,26 +23,46 @@ import '../../features/profile/domain/entities/user_profile_entity.dart';
 import '../../features/profile/presentation/screens/edit_profile_screen.dart';
 import '../../features/notifications/presentation/screens/notification_center_screen.dart';
 
+/// Routes a guest cannot open: they act on an account (booking, messaging,
+/// posting, reviews, profile, notifications).
+const Set<String> _kAccountRoutes = {
+  '/create-listing',
+  '/booking-request',
+  '/booking-detail',
+  '/write-review',
+  '/chat',
+  '/edit-profile',
+  '/notifications',
+};
+
 /// App-wide route definitions. Use with [MaterialApp.router] via [appRouter].
 final GoRouter appRouter = GoRouter(
   initialLocation: '/splash',
+  // Keeps the native tab bar's glass from showing through pushed screens.
+  observers: [CNTabBarRouteObserver()],
+  // Guests are sent to Log in, whose "Sign up" link covers new accounts.
+  redirect: (context, state) {
+    final isGuest = AppSupabase.client.auth.currentSession == null;
+    if (isGuest && _kAccountRoutes.contains(state.uri.path)) {
+      final extra = state.extra;
+      // A booking attempt resumes on the listing it started from.
+      if (state.uri.path == '/booking-request' && extra is ListingEntity) {
+        PendingRoute.save('/listing/${extra.id}', extra: extra);
+      } else {
+        PendingRoute.save(state.uri.path, extra: extra);
+      }
+      return '/login';
+    }
+    return null;
+  },
   routes: [
-    GoRoute(
-      path: '/',
-      redirect: (context, state) => '/splash',
-    ),
-    GoRoute(
-      path: '/splash',
-      builder: (context, state) => const SplashScreen(),
-    ),
+    GoRoute(path: '/', redirect: (context, state) => '/splash'),
+    GoRoute(path: '/splash', builder: (context, state) => const SplashScreen()),
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
     ),
-    GoRoute(
-      path: '/login',
-      builder: (context, state) => const LoginScreen(),
-    ),
+    GoRoute(path: '/login', builder: (context, state) => const LoginScreen()),
     GoRoute(
       path: '/home',
       builder: (context, state) => const MainShellScreen(),

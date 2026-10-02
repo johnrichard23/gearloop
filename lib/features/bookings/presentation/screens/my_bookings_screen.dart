@@ -128,7 +128,12 @@ class _LoadingList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.all(AppSpacing.kSpacing16),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.kSpacing16,
+        AppSpacing.kSpacing16,
+        AppSpacing.kSpacing16,
+        AppSpacing.kSpacing16 + MediaQuery.paddingOf(context).bottom,
+      ),
       itemCount: 6,
       separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.kSpacing12),
       itemBuilder: (context, index) => const LoadingSkeleton(
@@ -167,7 +172,12 @@ class _BookingsList extends StatelessWidget {
     }
 
     return ListView.separated(
-      padding: const EdgeInsets.all(AppSpacing.kSpacing16),
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.kSpacing16,
+        AppSpacing.kSpacing16,
+        AppSpacing.kSpacing16,
+        AppSpacing.kSpacing16 + MediaQuery.paddingOf(context).bottom,
+      ),
       itemCount: bookings.length,
       separatorBuilder: (_, __) => const SizedBox(height: AppSpacing.kSpacing12),
       itemBuilder: (context, index) {

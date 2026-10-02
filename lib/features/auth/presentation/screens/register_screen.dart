@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/router/pending_route.dart';
 import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
@@ -10,6 +11,7 @@ import '../../../../core/widgets/legal_notice.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../widgets/auth_pill_field.dart';
 import '../widgets/auth_shell.dart';
+import '../widgets/guest_browse_link.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   const RegisterScreen({super.key});
@@ -52,7 +54,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     }
 
     if (success) {
-      context.go('/home');
+      PendingRoute.goAfterAuth(context);
       return;
     }
 
@@ -82,23 +84,29 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       lead: 'Create your ',
       highlight: 'account',
       subtitle: 'Join Rentra to rent and lend gear.',
-      footer: TextButton(
-        onPressed: () => context.pop(),
-        child: Text.rich(
-          TextSpan(
-            text: 'Already have an account? ',
-            style: AppTextStyles.kTextBodyMedium,
-            children: [
+      footer: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextButton(
+            onPressed: () => context.pop(),
+            child: Text.rich(
               TextSpan(
-                text: 'Log in',
-                style: AppTextStyles.kTextBodyMedium.copyWith(
-                  color: AppColors.kColorPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
+                text: 'Already have an account? ',
+                style: AppTextStyles.kTextBodyMedium,
+                children: [
+                  TextSpan(
+                    text: 'Log in',
+                    style: AppTextStyles.kTextBodyMedium.copyWith(
+                      color: AppColors.kColorPrimary,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+          const GuestBrowseLink(),
+        ],
       ),
       onBack: () => context.pop(),
       child: Form(
