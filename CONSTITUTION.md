@@ -173,6 +173,7 @@ Never set clipBehavior without an accompanying decoration.
 - Generate the smallest possible diff — change only what was asked
 - Use existing `AppColors`, `AppTextStyles`, `AppSpacing` constants
 - Write null-safe Dart — no force-unwraps without justification
+- Consult the reference skills in §15 before designing or building UI
 
 ### The AI must never:
 - Install new packages without being asked
@@ -499,5 +500,25 @@ Grotesque headlines, a warm neighbour-to-neighbour voice. When in doubt, make it
 
 ---
 
-*Last updated: October 2026 | Version 1.2*
+## 15. Reference Skills
+
+Design and build work consults these skills. Invoke the relevant one before designing or writing UI,
+and say which you used. This list grows over time: add new skills here, not in a separate note.
+
+| Skill | Use it for |
+|---|---|
+| `/anthropic-skills:flutter-app-design-skill` | Any Flutter UI: screens, flows, onboarding, tab bars, sheets, motion, dark mode, text scaling, navigation semantics. The default for Rentra work. |
+| `/anthropic-skills:canvas-design` | Static visual pieces: posters, illustrations, marketing and brand visuals, and design exploration outside the app UI. |
+| `/anthropic-skills:swiftui-app-design-skill` | Reference only for iOS-native feel: HIG fidelity, navigation semantics, motion, Dynamic Type. Rentra is Flutter, so take the principles and express them in Flutter. Never write SwiftUI for the app. |
+
+### 15.1 How the skills fit the rest of this document
+- The stack (§2) and standards (§3, §13) win. A skill never overrides the tokens, Riverpod, Clean
+  Architecture or the "no new packages without approval" rule.
+- Originality (§14) wins over a skill's "study real apps" workflow. Take the principle, never the
+  layout, assets or copy, and do not name the studied app in code, comments, commits, docs or UI.
+- Apply a skill's guidance with the smallest diff (§7); do not restyle unrelated screens.
+
+---
+
+*Last updated: October 2026 | Version 1.3*
 *Treat this document as infrastructure. Update it intentionally, not casually.*
