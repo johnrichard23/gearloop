@@ -9,7 +9,9 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 import '../widgets/auth_pill_field.dart';
+import '../utils/auth_validators.dart';
 import '../widgets/auth_shell.dart';
+import '../widgets/auth_switch_link.dart';
 import '../widgets/guest_browse_link.dart';
 import '../widgets/social_sign_in_button.dart';
 
@@ -87,33 +89,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final isLoading = ref.watch(authProvider).isLoading;
     return Form(
       key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AuthPillField(
-            label: 'Email',
-            controller: _emailController,
-            hint: 'you@example.com',
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.next,
-            autofillHints: const [AutofillHints.email],
-            validator: _validateEmail,
-          ),
-          const SizedBox(height: AppSpacing.kSpacing12),
-          AuthPillField(
-            label: 'Password',
-            controller: _passwordController,
-            isPassword: true,
-            textInputAction: TextInputAction.done,
-            autofillHints: const [AutofillHints.password],
-            validator: _validateNotEmpty,
-            onSubmitted: (_) => _onLogin(),
-            labelTrailing: GestureDetector(
-              onTap: () => context.go('/forgot-password'),
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppSpacing.kSpacing4,
+      child: AutofillGroup(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AuthPillField(
+              label: 'Email',
+              controller: _emailController,
+              hint: 'you@example.com',
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              autofillHints: const [AutofillHints.email],
+              validator: AuthValidators.email,
+            ),
+            const SizedBox(height: AppSpacing.kSpacing12),
+            AuthPillField(
+              label: 'Password',
+              controller: _passwordController,
+              isPassword: true,
+              textInputAction: TextInputAction.done,
+              autofillHints: const [AutofillHints.password],
+              validator: AuthValidators.required,
+              onSubmitted: (_) => _onLogin(),
+            ),
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton(
+                onPressed: () => context.go('/forgot-password'),
+                style: TextButton.styleFrom(
+                  minimumSize: const Size(
+                    AppSpacing.kSpacing48,
+                    AppSpacing.kSpacing48,
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.kSpacing16,
+                  ),
                 ),
                 child: Text(
                   'Forgot password?',
@@ -123,63 +133,52 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: AppSpacing.kSpacing16),
-          AppButton(
-            label: 'Log in',
-            onTap: _onLogin,
-            isLoading: isLoading,
-            isPill: true,
-          ),
-          const SizedBox(height: AppSpacing.kSpacing16),
-          const _OrDivider(label: 'or continue with'),
-          const SizedBox(height: AppSpacing.kSpacing16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SocialSignInButton(
-                provider: SocialProvider.apple,
-                onTap: () => _onSocial(SocialProvider.apple),
-              ),
-              const SizedBox(width: AppSpacing.kSpacing16),
-              SocialSignInButton(
-                provider: SocialProvider.google,
-                onTap: () => _onSocial(SocialProvider.google),
-              ),
-              const SizedBox(width: AppSpacing.kSpacing16),
-              SocialSignInButton(
-                provider: SocialProvider.facebook,
-                onTap: () => _onSocial(SocialProvider.facebook),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildFooter() {
-    final signUp = TextButton(
-      onPressed: () => context.push('/register'),
-      child: Text.rich(
-        TextSpan(
-          text: 'New to Rentra? ',
-          style: AppTextStyles.kTextBodyMedium,
-          children: [
-            TextSpan(
-              text: 'Sign up',
-              style: AppTextStyles.kTextBodyMedium.copyWith(
-                color: AppColors.kColorPrimary,
-                fontWeight: FontWeight.w700,
-              ),
+            const SizedBox(height: AppSpacing.kSpacing8),
+            AppButton(
+              label: 'Log in',
+              onTap: _onLogin,
+              isLoading: isLoading,
+              isPill: true,
+            ),
+            const SizedBox(height: AppSpacing.kSpacing24),
+            const _OrDivider(label: 'or continue with'),
+            const SizedBox(height: AppSpacing.kSpacing16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                SocialSignInButton(
+                  provider: SocialProvider.apple,
+                  onTap: () => _onSocial(SocialProvider.apple),
+                ),
+                const SizedBox(width: AppSpacing.kSpacing16),
+                SocialSignInButton(
+                  provider: SocialProvider.google,
+                  onTap: () => _onSocial(SocialProvider.google),
+                ),
+                const SizedBox(width: AppSpacing.kSpacing16),
+                SocialSignInButton(
+                  provider: SocialProvider.facebook,
+                  onTap: () => _onSocial(SocialProvider.facebook),
+                ),
+              ],
             ),
           ],
         ),
       ),
     );
+  }
+
+  Widget _buildFooter() {
     return Column(
       mainAxisSize: MainAxisSize.min,
-      children: [signUp, const GuestBrowseLink()],
+      children: [
+        AuthSwitchLink(
+          prompt: 'New to Rentra?',
+          action: 'Sign up',
+          onTap: () => context.push('/register'),
+        ),
+        const GuestBrowseLink(),
+      ],
     );
   }
 }
@@ -207,23 +206,4 @@ class _OrDivider extends StatelessWidget {
       ],
     );
   }
-}
-
-String? _validateNotEmpty(String? value) {
-  if (value == null || value.trim().isEmpty) {
-    return 'This field is required';
-  }
-  return null;
-}
-
-String? _validateEmail(String? value) {
-  final emptyError = _validateNotEmpty(value);
-  if (emptyError != null) {
-    return emptyError;
-  }
-  final emailRegex = RegExp(r'^[\w.%+-]+@[\w.-]+\.[a-zA-Z]{2,}$');
-  if (!emailRegex.hasMatch(value!.trim())) {
-    return 'Enter a valid email address';
-  }
-  return null;
 }
