@@ -4,17 +4,16 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/constants/app_text_styles.dart';
-import '../../../../core/widgets/app_button.dart';
-import '../../../../core/widgets/legal_notice.dart';
+import '../../domain/entities/onboarding_slide.dart';
 import '../widgets/cloud_bank.dart';
 import '../widgets/earn_scene.dart';
 import '../widgets/gear_radar_scene.dart';
 import '../widgets/onboarding_copy.dart';
-import '../widgets/onboarding_progress_bar.dart';
+import '../widgets/onboarding_exit_actions.dart';
+import '../widgets/onboarding_next_row.dart';
+import '../widgets/onboarding_top_bar.dart';
 import '../providers/onboarding_provider.dart';
 import '../widgets/return_scene.dart';
-import '../widgets/timer_next_button.dart';
 
 /// First-run story: auto-advancing slides with a segmented progress bar.
 ///
@@ -36,44 +35,15 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
     with TickerProviderStateMixin {
-  static const Duration _kSlideDuration = Duration(seconds: 4);
+  static const Duration _kSlideDuration = Duration(seconds: 6);
   static const Duration _kRevealDuration = Duration(milliseconds: 900);
   static const Duration _kCloudLoop = Duration(seconds: 16);
   static const Duration _kControlsSwap = Duration(milliseconds: 300);
   static const double _kHoldPoint = 0.85;
   static const double _kStaticProgress = 0.8;
   static const double _kSwipeVelocity = 300;
-  static const double _kTopBarHeight = 64;
   static const double _kCopyMinHeight = 160;
   static const double _kControlsHeight = 106;
-  static const double _kLinkButtonHeight = 44;
-
-  static const List<_Slide> _slides = [
-    _Slide(
-      eyebrow: '01 — NEARBY',
-      lead: 'Rent what you ',
-      highlight: 'need',
-      body:
-          'Cameras, drones, camping and audio gear from people near you, '
-          'by the day.',
-    ),
-    _Slide(
-      eyebrow: '02 — EARN',
-      lead: 'Make your gear ',
-      highlight: 'earn',
-      body:
-          'Earn from what you own. List it, set your daily rate, and '
-          "you're done.",
-    ),
-    _Slide(
-      eyebrow: '03 — EASY',
-      lead: 'Rent. Use. ',
-      highlight: 'Return.',
-      body:
-          'Book the dates, pick it up from a neighbor, and bring it back '
-          'when you are done.',
-    ),
-  ];
 
   late final AnimationController _controller;
   late final AnimationController _reveal;
@@ -85,7 +55,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   /// Set once the user swipes or taps Next: auto-advance stops for good.
   bool _manual = false;
 
-  bool get _isLast => _index == _slides.length - 1;
+  bool get _isLast => _index == kOnboardingSlides.length - 1;
 
   @override
   void initState() {
@@ -142,7 +112,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 
   void _goTo(int index, {bool byUser = false}) {
-    if (index < 0 || index >= _slides.length || !mounted) return;
+    if (index < 0 || index >= kOnboardingSlides.length || !mounted) return;
     setState(() {
       _index = index;
       if (byUser) _manual = true;
@@ -187,7 +157,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
               children: [
                 Expanded(
                   child: Padding(
-                    padding: EdgeInsets.only(top: topInset + _kTopBarHeight),
+                    padding: EdgeInsets.only(
+                      top: topInset + OnboardingTopBar.height,
+                    ),
                     child: _buildScene(),
                   ),
                 ),
@@ -207,45 +179,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
   }
 
   Widget _buildTopBar() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) {
-            final fill = _reduceMotion
-                ? 1.0
-                : _controller.value / (_holds ? _kHoldPoint : 1);
-            return OnboardingProgressBar(
-              count: _slides.length,
-              index: _index,
-              fill: fill,
-            );
-          },
-        ),
-        SizedBox(
-          height: _kTopBarHeight - AppSpacing.kSpacing16,
-          child: Align(
-            alignment: Alignment.centerRight,
-            child: AnimatedOpacity(
-              duration: _kControlsSwap,
-              opacity: _isLast ? 0 : 1,
-              child: IgnorePointer(
-                ignoring: _isLast,
-                child: TextButton(
-                  onPressed: _enterAsGuest,
-                  child: Text(
-                    'Skip',
-                    style: AppTextStyles.kTextButton.copyWith(
-                      color: AppColors.kColorTextSecondary,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
+    return OnboardingTopBar(
+      animation: _controller,
+      fill: () =>
+          _reduceMotion ? 1.0 : _controller.value / (_holds ? _kHoldPoint : 1),
+      count: kOnboardingSlides.length,
+      index: _index,
+      showSkip: !_isLast,
+      onSkip: _enterAsGuest,
     );
   }
 
@@ -265,7 +206,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
 
   Widget _buildPanel() {
     final bottomInset = MediaQuery.paddingOf(context).bottom;
-    final slide = _slides[_index];
+    final slide = kOnboardingSlides[_index];
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -294,12 +235,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
             children: [
               ConstrainedBox(
                 constraints: const BoxConstraints(minHeight: _kCopyMinHeight),
-                child: OnboardingCopy(
-                  eyebrow: slide.eyebrow,
-                  lead: slide.lead,
-                  highlight: slide.highlight,
-                  body: slide.body,
-                  reveal: _reveal,
+                child: Semantics(
+                  liveRegion: true,
+                  child: OnboardingCopy(
+                    lead: slide.lead,
+                    highlight: slide.highlight,
+                    body: slide.body,
+                    reveal: _reveal,
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.kSpacing8),
@@ -314,8 +257,19 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   child: AnimatedSwitcher(
                     duration: _kControlsSwap,
                     child: _isLast
-                        ? _buildExitActions()
-                        : _buildAccountAndNext(),
+                        ? OnboardingExitActions(
+                            key: const ValueKey<String>('exit-actions'),
+                            onStartBrowsing: _enterAsGuest,
+                            onLogin: _goToLogin,
+                          )
+                        : OnboardingNextRow(
+                            key: const ValueKey<String>('next-row'),
+                            animation: _controller,
+                            fill: () => _reduceMotion || _manual
+                                ? 0
+                                : _controller.value,
+                            onNext: () => _goTo(_index + 1, byUser: true),
+                          ),
                   ),
                 ),
               ),
@@ -325,75 +279,4 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
       ],
     );
   }
-
-  Widget _buildAccountAndNext() {
-    return Row(
-      key: const ValueKey<String>('account-next'),
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        TextButton(
-          onPressed: _goToLogin,
-          style: TextButton.styleFrom(
-            padding: EdgeInsets.zero,
-            minimumSize: const Size(0, _kLinkButtonHeight),
-            alignment: Alignment.centerLeft,
-          ),
-          child: Text(
-            'I have an account',
-            style: AppTextStyles.kTextButton.copyWith(
-              color: AppColors.kColorPrimary,
-            ),
-          ),
-        ),
-        AnimatedBuilder(
-          animation: _controller,
-          builder: (context, _) => TimerNextButton(
-            fill: _reduceMotion || _manual ? 0 : _controller.value,
-            onTap: () => _goTo(_index + 1, byUser: true),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildExitActions() {
-    return Column(
-      key: const ValueKey<String>('exit-actions'),
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppButton(label: 'Start browsing', onTap: _enterAsGuest),
-        const SizedBox(height: AppSpacing.kSpacing8),
-        TextButton(
-          onPressed: _goToLogin,
-          style: TextButton.styleFrom(
-            minimumSize: const Size.fromHeight(_kLinkButtonHeight),
-          ),
-          child: Text(
-            'Log in or sign up',
-            style: AppTextStyles.kTextButton.copyWith(
-              color: AppColors.kColorPrimary,
-            ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.kSpacing8),
-        const LegalNotice(prefix: 'By continuing'),
-      ],
-    );
-  }
-}
-
-class _Slide {
-  const _Slide({
-    required this.eyebrow,
-    required this.lead,
-    required this.highlight,
-    required this.body,
-  });
-
-  final String eyebrow;
-  final String lead;
-  final String highlight;
-  final String body;
 }
