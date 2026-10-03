@@ -11,7 +11,9 @@ import '../../../../core/constants/app_spacing.dart';
 import '../../../../core/constants/app_text_styles.dart';
 import '../../../../core/widgets/app_button.dart';
 import '../../../../core/widgets/app_text_field.dart';
+import '../../domain/entities/listing_categories.dart';
 import '../../domain/entities/listing_entity.dart';
+import '../../domain/entities/listing_filter.dart';
 import '../providers/create_listing_provider.dart';
 import '../providers/listings_provider.dart';
 
@@ -32,17 +34,10 @@ class _CreateListingScreenState extends ConsumerState<CreateListingScreen> {
   final _depositController = TextEditingController();
   final _minDaysController = TextEditingController(text: '1');
 
-  static const List<String> _categories = [
-    'Cameras',
-    'Drones',
-    'Audio',
-    'Lighting',
-    'Camping',
-    'Sports',
-    'Instruments',
-    'Events',
-    'Tools',
-  ];
+  /// The categories a host can pick: every category except the "All" filter.
+  static final List<String> _categories = kListingCategories
+      .where((category) => category != ListingFilter.allCategories)
+      .toList();
 
   String? _selectedCategory;
   double? _selectedLat;
