@@ -46,6 +46,12 @@
   but no email is sent. Wire it to Supabase `resetPasswordForEmail` before launch.
 - **Sign-up password rules:** the only check is non-empty; "Confirm password" was removed because
   the show/hide toggle covers it. Add a minimum length once the Supabase setting is confirmed.
+- **Favourites:** the heart on listing cards is UI only. It toggles on screen but saves nothing
+  and resets when the card rebuilds. Build favourites (table, RLS, repository, saved list) soon.
+- **New categories (Fashion, Adventure, Utility):** added to the shared category list and shown in
+  Home's scrolling category row; hosts can pick them when listing. Vehicles and motorbikes (Adventure,
+  Utility) carry insurance, licence and damage-deposit questions that are not designed yet.
+  Supabase `gear_listings.category` is plain text with no constraint (checked), so the new values work.
 - **Logo** is a temporary two-ring placeholder.
 - **Figma** still has the old teal variables and "GearLoop" file title; update to the earthy palette
   when the file is writable.
@@ -58,6 +64,38 @@
   screen, which resumes the listing or screen they were on.
 - **Signing:** the Apple team and bundle ID used for device builds are local Xcode settings and are
   not committed; `com.example.rentra` is still the placeholder bundle ID in the repo.
+
+### Open Questions (to evaluate while polishing)
+
+**Product / UX decisions**
+1. **Host name on listing cards:** left off for now (the rating, review count and verified tick carry
+   trust). Revisit after testing with renters.
+2. **"Rented 23 times" trust line:** needs a completed-booking count per listing from Supabase. Skipped
+   so the card stays short.
+3. **Do renters start with search or categories?** Assumed, not researched. Test with about five
+   renters in Sorsogon ("find a camera for this weekend").
+4. **Home sections:** keep the 2x2 "Near you" grid until Home has two or more sections, then switch
+   them to horizontal rows. Where does the removed "Top rated hosts" row go (Browse, Home, or cut)?
+5. **Category photos instead of icons:** revisit once real, consistent photography exists.
+6. **Naming:** "Tools" (matches existing data) vs "Power tools" (PRD wording).
+
+**Needs backend or design work**
+7. Favourites (heart is UI only): table, RLS, repository, saved list.
+8. Reset password is UI only; wire to Supabase `resetPasswordForEmail`.
+9. Sign-up has no minimum password length; confirm the Supabase setting and add a hint.
+10. Vehicles (Adventure, Utility): insurance, driver's licence and damage-deposit rules are undesigned.
+11. Location picker is a hard-coded city; notification dot is always shown.
+
+**Verify on device**
+12. Run the redesigned auth, Home and listing card in the simulator, including a 320dp phone and 2x
+    text size (category labels, card price and rating row).
+13. Photo fade strength (0.35 in `PhotoTopScrim`) on very bright and very dark photos; add an
+    `AppElevation` token to replace the inline chip shadow.
+
+**Housekeeping**
+14. Failing tests not from this work: `test/widget_test.dart` (template, `MyApp` missing) and
+    `create_booking_request_test.dart`.
+15. Home redesign, listing card, heart and categories are not committed yet.
 
 ### Known UI Issues
 
