@@ -14,6 +14,7 @@
 | Guest mode | Built; guests browse, and Post, Bookings and Profile prompt "Log in or sign up". Account-only routes redirect to Log in and return to the listing after sign-in |
 | Session handling | Supabase session restored on launch; `isSignedInProvider` follows login and logout live; Log out signs out of Supabase |
 | Bottom navigation | Real Liquid Glass tab bar on iOS 26+; Flutter-drawn floating pill on older iOS and Android; gold Post button in the centre |
+| Search | Built; tapping the search field on Home or Browse opens a full-screen search (`/search`) with the keyboard up. Empty: last 3 searches (saved on the device only, `shared_preferences`) and "Popular near you" categories ranked from the loaded listings as scrolling icon chips, and "Recently viewed" (last 3 opened listings, device only). Sections with nothing to show are hidden. Typing: matching categories and listing titles. Picking one filters Browse; Browse's field shows the active query with a clear button |
 | Browse / Discovery, Listing Detail, Create Listing | Live on Supabase |
 | Bookings (request/detail/my-bookings) | Live on Supabase |
 | Messaging/Chat | UI + data layer built; not yet Realtime-wired |
@@ -92,10 +93,24 @@
 13. Photo fade strength (0.35 in `PhotoTopScrim`) on very bright and very dark photos; add an
     `AppElevation` token to replace the inline chip shadow.
 
+**Search polish**
+14. Slight delay when tapping back on the full-screen search with the keyboard open. Tried: stop Home, Browse
+    and the tab shell resizing for the keyboard, a 180ms exit, close keyboard and screen together. Not
+    confirmed fixed; test in `flutter run --profile`, and if it persists delay the autofocus by a frame.
+
+**Search polish (cont.)**
+15. "Popular near you" is ranked from loaded listings (reviews, then listing count), not from what people
+    actually search. True trending searches need search logging (a Supabase table, RLS, privacy wording).
+
+16. Debounce: suggestions are computed locally from loaded listings, so no debounce yet. When search
+    moves to the server (Supabase full-text or PostGIS), add a 300ms debounce, a stale-response guard,
+    a 2-character minimum, and keep local suggestions visible while the server ones load.
+
 **Housekeeping**
-14. Failing tests not from this work: `test/widget_test.dart` (template, `MyApp` missing) and
+17. Failing tests not from this work: `test/widget_test.dart` (template, `MyApp` missing) and
     `create_booking_request_test.dart`.
-15. Home redesign, listing card, heart and categories are not committed yet.
+18. The Home redesign, listing card, heart and categories are committed on `feature/home-redesign`; the
+    search work (full-screen search, recent searches, suggestions) is not committed yet.
 
 ### Known UI Issues
 
