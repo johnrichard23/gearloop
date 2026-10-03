@@ -25,6 +25,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.kColorBackground,
+      resizeToAvoidBottomInset: false,
       body: SingleChildScrollView(
         child: SafeArea(
           bottom: false,
@@ -46,7 +47,7 @@ class HomeScreen extends StatelessWidget {
                       onNotificationsTap: () => context.push('/notifications'),
                     ),
                     const SizedBox(height: AppSpacing.kSpacing12),
-                    HomeSearchPill(onTap: onBrowseTap),
+                    HomeSearchPill(onSearch: onBrowseTap),
                   ],
                 ),
               ),

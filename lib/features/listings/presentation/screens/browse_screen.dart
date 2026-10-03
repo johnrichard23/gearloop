@@ -8,6 +8,7 @@ import '../../../../core/errors/failures.dart';
 import '../../../date_selection/domain/entities/date_range_selection.dart';
 import '../../../date_selection/presentation/date_range_label.dart';
 import '../../domain/entities/listing_filter.dart';
+import '../../domain/entities/search_selection.dart';
 import '../../../../core/widgets/empty_state_widget.dart';
 import '../../../../core/widgets/error_state_widget.dart';
 import '../providers/browse_providers.dart';
@@ -16,7 +17,7 @@ import '../widgets/active_filter_chip.dart';
 import '../widgets/browse_filter_button.dart';
 import '../widgets/browse_filters_sheet.dart';
 import '../widgets/browse_map_view.dart';
-import '../widgets/browse_search_field.dart';
+import '../widgets/search_entry_field.dart';
 import '../widgets/listings_grid.dart';
 import '../widgets/map_toggle_button.dart';
 
@@ -32,6 +33,16 @@ class BrowseScreen extends ConsumerStatefulWidget {
 
 class _BrowseScreenState extends ConsumerState<BrowseScreen> {
   bool _showMap = false;
+
+  Future<void> _openSearch(String query) async {
+    final selection = await context.push<SearchSelection>(
+      '/search',
+      extra: query,
+    );
+    if (selection != null && mounted) {
+      applySearchSelection(ref, selection);
+    }
+  }
 
   Future<void> _openFilters() {
     return showModalBottomSheet<void>(
@@ -50,6 +61,7 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.kColorBackground,
+      resizeToAvoidBottomInset: false,
       body: SafeArea(
         bottom: false,
         child: Column(
@@ -91,11 +103,13 @@ class _BrowseScreenState extends ConsumerState<BrowseScreen> {
         AppSpacing.kSpacing8,
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
-            child: BrowseSearchField(
-              onChanged: (value) =>
-                  ref.read(browseQueryProvider.notifier).state = value,
+            child: SearchEntryField(
+              query: filter.query,
+              onTap: () => _openSearch(filter.query),
+              onClear: () => ref.read(browseQueryProvider.notifier).state = '',
             ),
           ),
           const SizedBox(width: AppSpacing.kSpacing12),

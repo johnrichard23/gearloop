@@ -7,6 +7,7 @@ import '../../../../core/constants/app_text_styles.dart';
 import '../../../listings/domain/entities/listing_categories.dart';
 import '../../../listings/domain/entities/listing_filter.dart';
 import '../../../listings/presentation/providers/browse_providers.dart';
+import '../../../listings/presentation/widgets/category_icons.dart';
 
 /// Scrolling row of categories, each a solid circle with an icon. Tapping one
 /// opens Browse on it. It follows [kListingCategories], so a new category only
@@ -15,21 +16,6 @@ class HomeCategoryRow extends ConsumerWidget {
   const HomeCategoryRow({required this.onBrowseTap, super.key});
 
   final VoidCallback onBrowseTap;
-
-  static const Map<String, IconData> _icons = {
-    'Cameras': Icons.camera_alt_outlined,
-    'Drones': Icons.flight_outlined,
-    'Audio': Icons.mic_outlined,
-    'Lighting': Icons.lightbulb_outline,
-    'Camping': Icons.cabin_outlined,
-    'Sports': Icons.pedal_bike_outlined,
-    'Adventure': Icons.surfing,
-    'Tools': Icons.handyman_outlined,
-    'Fashion': Icons.checkroom_outlined,
-    'Utility': Icons.local_shipping_outlined,
-    'Instruments': Icons.music_note_outlined,
-    'Events': Icons.celebration_outlined,
-  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -44,7 +30,7 @@ class HomeCategoryRow extends ConsumerWidget {
           for (final category in categories)
             _CategoryTile(
               label: category,
-              icon: _icons[category] ?? Icons.category_outlined,
+              icon: categoryIcon(category),
               onTap: () {
                 ref.read(browseCategoryProvider.notifier).state = category;
                 onBrowseTap();

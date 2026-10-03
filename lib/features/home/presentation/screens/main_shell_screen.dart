@@ -61,6 +61,9 @@ class _MainShellScreenState extends ConsumerState<MainShellScreen> {
     final isSignedIn = ref.watch(isSignedInProvider);
     return Scaffold(
       backgroundColor: AppColors.kColorBackground,
+      // No tab has a text field, so the keyboard (opened by the search screen
+      // on top) must not resize and re-lay-out the page underneath.
+      resizeToAvoidBottomInset: false,
       // Screens run underneath the floating bar; each pads its own scroll end.
       extendBody: true,
       body: AnnotatedRegion<SystemUiOverlayStyle>(

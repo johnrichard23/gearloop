@@ -1,50 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/app_spacing.dart';
-import '../../../../core/constants/app_text_styles.dart';
+import '../../../listings/domain/entities/search_selection.dart';
+import '../../../listings/presentation/providers/browse_providers.dart';
+import '../../../listings/presentation/widgets/search_entry_field.dart';
 
-/// Tappable search field that opens Browse, where the typing happens.
-class HomeSearchPill extends StatelessWidget {
-  const HomeSearchPill({required this.onTap, super.key});
+/// Home's search field. Tapping it opens the full-screen search; whatever is
+/// picked there is applied to Browse and Browse is opened.
+class HomeSearchPill extends ConsumerWidget {
+  const HomeSearchPill({required this.onSearch, super.key});
 
-  final VoidCallback onTap;
+  /// Opens Browse once something has been picked.
+  final VoidCallback onSearch;
 
   @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: 'Search cameras, drones, gear',
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          constraints: const BoxConstraints(minHeight: AppSpacing.kSpacing48),
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.kSpacing16,
-          ),
-          decoration: BoxDecoration(
-            color: AppColors.kColorSurface,
-            borderRadius: BorderRadius.circular(AppSpacing.kRadiusCircular),
-            border: Border.all(color: AppColors.kColorBorder),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.search,
-                size: AppSpacing.kIconMedium,
-                color: AppColors.kColorTextSecondary,
-              ),
-              const SizedBox(width: AppSpacing.kSpacing12),
-              Text(
-                'Search cameras, drones, gear...',
-                style: AppTextStyles.kTextBodyMedium.copyWith(
-                  color: AppColors.kColorTextHint,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    return SearchEntryField(
+      onTap: () async {
+        final selection = await context.push<SearchSelection>('/search');
+        if (selection != null) {
+          applySearchSelection(ref, selection);
+          onSearch();
+        }
+      },
     );
   }
 }

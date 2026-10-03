@@ -10,12 +10,19 @@ class CategoryChoiceChip extends StatelessWidget {
     required this.label,
     required this.isSelected,
     required this.onTap,
+    this.icon,
     super.key,
   });
 
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
+
+  /// Small icon before the label, when the chip stands for a category.
+  final IconData? icon;
+
+  Color get _foreground =>
+      isSelected ? AppColors.kColorOnPrimary : AppColors.kColorTextPrimary;
 
   @override
   Widget build(BuildContext context) {
@@ -26,6 +33,7 @@ class CategoryChoiceChip extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
+          constraints: const BoxConstraints(minHeight: AppSpacing.kSpacing48),
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.kSpacing16,
             vertical: AppSpacing.kSpacing12,
@@ -41,12 +49,22 @@ class CategoryChoiceChip extends StatelessWidget {
                   : AppColors.kColorBorderDark,
             ),
           ),
-          child: Text(
-            label,
-            style: AppTextStyles.kTextLabel.copyWith(
-              color: isSelected
-                  ? AppColors.kColorOnPrimary
-                  : AppColors.kColorTextPrimary,
+          // Centered at its own width: the chip is at least 48dp tall but
+          // never stretches wider than its label.
+          child: Center(
+            widthFactor: 1,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[
+                  Icon(icon, size: AppSpacing.kIconSmall, color: _foreground),
+                  const SizedBox(width: AppSpacing.kSpacing8),
+                ],
+                Text(
+                  label,
+                  style: AppTextStyles.kTextLabel.copyWith(color: _foreground),
+                ),
+              ],
             ),
           ),
         ),
