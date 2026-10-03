@@ -81,12 +81,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
               child: ListView(
                 keyboardDismissBehavior:
                     ScrollViewKeyboardDismissBehavior.onDrag,
-                padding: const EdgeInsets.all(AppSpacing.kSpacing16),
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.kSpacing16,
+                ),
                 children: [
                   if (_controller.text.trim().isEmpty)
                     ..._buildZeroState()
                   else
-                    ..._buildSuggestions(),
+                    ..._buildSuggestions().map(_inset),
                 ],
               ),
             ),
@@ -140,6 +142,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     );
   }
 
+  /// Side margin for content that sits inside the screen. The popular chips
+  /// skip it so they can run to the screen edge and show they scroll.
+  Widget _inset(Widget child) => Padding(
+    padding: const EdgeInsets.symmetric(horizontal: AppSpacing.kSpacing16),
+    child: child,
+  );
+
   /// Before anything is typed: the renter's own recent searches, what is
   /// popular near them, then the listings they looked at last. Empty sections
   /// are left out.
@@ -151,20 +160,24 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
     final viewed = ref.watch(recentlyViewedListingsProvider);
     if (searches.isEmpty && popular.isEmpty && viewed.isEmpty) {
       return [
-        Text(
-          'Try "camera", "tent" or "drone".',
-          style: AppTextStyles.kTextBodySmall,
+        _inset(
+          Text(
+            'Try "camera", "tent" or "drone".',
+            style: AppTextStyles.kTextBodySmall,
+          ),
         ),
       ];
     }
     final sections = <List<Widget>>[
       if (searches.isNotEmpty)
         [
-          RecentSearchesPanel(
-            searches: searches,
-            onSelect: _searchFor,
-            onRemove: notifier.remove,
-            onClearAll: notifier.clear,
+          _inset(
+            RecentSearchesPanel(
+              searches: searches,
+              onSelect: _searchFor,
+              onRemove: notifier.remove,
+              onClearAll: notifier.clear,
+            ),
           ),
         ],
       if (popular.isNotEmpty) _buildPopular(popular),
@@ -181,10 +194,11 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   List<Widget> _buildPopular(List<String> popular) {
     return [
-      Text('Popular near you', style: AppTextStyles.kTextLabel),
+      _inset(Text('Popular near you', style: AppTextStyles.kTextLabel)),
       const SizedBox(height: AppSpacing.kSpacing12),
       SingleChildScrollView(
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.kSpacing16),
         child: Row(
           children: [
             for (final category in popular) ...[
@@ -205,12 +219,14 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
   List<Widget> _buildViewed(List<ListingEntity> viewed) {
     return [
-      Text('Recently viewed', style: AppTextStyles.kTextLabel),
+      _inset(Text('Recently viewed', style: AppTextStyles.kTextLabel)),
       const SizedBox(height: AppSpacing.kSpacing8),
       for (final listing in viewed)
-        RecentlyViewedRow(
-          listing: listing,
-          onTap: () => context.push('/listing/${listing.id}', extra: listing),
+        _inset(
+          RecentlyViewedRow(
+            listing: listing,
+            onTap: () => context.push('/listing/${listing.id}', extra: listing),
+          ),
         ),
     ];
   }
