@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../date_selection/domain/entities/date_range_selection.dart';
 import '../../domain/entities/listing_entity.dart';
 import '../../domain/entities/listing_filter.dart';
+import '../../domain/entities/search_selection.dart';
 import '../../domain/usecases/filter_listings.dart';
 import 'listings_provider.dart';
 
@@ -42,3 +43,9 @@ final browseResultsProvider = Provider<AsyncValue<List<ListingEntity>>>((ref) {
       .watch(listingsProvider)
       .whenData((listings) => filterListings(listings, filter));
 });
+
+/// Makes Browse show what the renter picked on the search screen.
+void applySearchSelection(WidgetRef ref, SearchSelection selection) {
+  ref.read(browseQueryProvider.notifier).state = selection.query;
+  ref.read(browseCategoryProvider.notifier).state = selection.category;
+}

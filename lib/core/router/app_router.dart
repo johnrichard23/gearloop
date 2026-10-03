@@ -17,6 +17,8 @@ import '../../features/listings/domain/entities/listing_entity.dart';
 import '../../features/listings/presentation/screens/create_listing_screen.dart';
 import '../../features/listings/presentation/screens/listing_detail_screen.dart';
 import '../../features/listings/presentation/screens/location_picker_screen.dart';
+import '../../features/listings/presentation/screens/search_screen.dart';
+import '../../features/listings/presentation/widgets/viewed_listing_recorder.dart';
 import '../../features/bookings/presentation/screens/booking_request_screen.dart';
 import '../../features/bookings/presentation/screens/booking_detail_screen.dart';
 import '../../features/reviews/presentation/screens/write_review_screen.dart';
@@ -89,6 +91,34 @@ final GoRouter appRouter = GoRouter(
       },
     ),
     GoRoute(
+      path: '/search',
+      pageBuilder: (context, state) {
+        final extra = state.extra;
+        return CustomTransitionPage<void>(
+          key: state.pageKey,
+          transitionDuration: const Duration(milliseconds: 250),
+          reverseTransitionDuration: const Duration(milliseconds: 180),
+          child: SearchScreen(initialQuery: extra is String ? extra : ''),
+          transitionsBuilder: (context, animation, _, child) {
+            final curved = CurvedAnimation(
+              parent: animation,
+              curve: Curves.easeOutCubic,
+            );
+            return FadeTransition(
+              opacity: curved,
+              child: SlideTransition(
+                position: Tween<Offset>(
+                  begin: const Offset(0, 0.04),
+                  end: Offset.zero,
+                ).animate(curved),
+                child: child,
+              ),
+            );
+          },
+        );
+      },
+    ),
+    GoRoute(
       path: '/create-listing',
       builder: (context, state) => const CreateListingScreen(),
     ),
@@ -106,7 +136,10 @@ final GoRouter appRouter = GoRouter(
       path: '/listing/:id',
       builder: (context, state) {
         final listing = state.extra as ListingEntity;
-        return ListingDetailScreen(listing: listing);
+        return ViewedListingRecorder(
+          listingId: listing.id,
+          child: ListingDetailScreen(listing: listing),
+        );
       },
     ),
     GoRoute(

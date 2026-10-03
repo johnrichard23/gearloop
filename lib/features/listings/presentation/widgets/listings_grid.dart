@@ -11,37 +11,49 @@ class ListingsGrid extends StatelessWidget {
   const ListingsGrid({
     required this.listings,
     required this.bottomPadding,
+    this.isEmbedded = false,
     super.key,
-  });
+  }) : skeletonCount = 0;
 
   /// A grid of placeholders for the loading state.
-  const ListingsGrid.skeleton({required this.bottomPadding, super.key})
-    : listings = null;
+  const ListingsGrid.skeleton({
+    required this.bottomPadding,
+    this.isEmbedded = false,
+    this.skeletonCount = 6,
+    super.key,
+  }) : listings = null;
 
   final List<ListingEntity>? listings;
 
   /// Space kept clear at the bottom for the floating bars.
   final double bottomPadding;
 
-  static const int _kSkeletonCount = 6;
+  /// Sizes the grid to its cards and leaves scrolling to the parent, for use
+  /// inside another scroll view such as Home.
+  final bool isEmbedded;
+
+  /// How many placeholders the skeleton grid shows.
+  final int skeletonCount;
 
   @override
   Widget build(BuildContext context) {
     final items = listings;
     return GridView.builder(
+      shrinkWrap: isEmbedded,
+      physics: isEmbedded ? const NeverScrollableScrollPhysics() : null,
       padding: EdgeInsets.fromLTRB(
         AppSpacing.kSpacing16,
         AppSpacing.kSpacing8,
         AppSpacing.kSpacing16,
         AppSpacing.kSpacing16 + bottomPadding,
       ),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: AppSpacing.kSpacing12,
         mainAxisSpacing: AppSpacing.kSpacing12,
-        mainAxisExtent: 290,
+        mainAxisExtent: ListingCard.heightFor(context),
       ),
-      itemCount: items?.length ?? _kSkeletonCount,
+      itemCount: items?.length ?? skeletonCount,
       itemBuilder: (context, index) {
         if (items == null) {
           return const LoadingSkeleton(

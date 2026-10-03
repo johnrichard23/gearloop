@@ -267,7 +267,10 @@ To stay focused, Rentra is deliberately not building these in Phase 1:
 - Sports & Fitness Equipment
 - Musical Instruments
 - Event & Party Equipment
-- Power Tools
+- Power Tools (app label: Tools)
+- Fashion Rentals (wedding dresses, garments, accessories)
+- Adventure Tourism (motorbikes, surfboards, snorkels, car rental)
+- Utility (vehicles for hauling heavy equipment or goods)
 - Other
 
 ---
