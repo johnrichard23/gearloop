@@ -106,11 +106,20 @@
     moves to the server (Supabase full-text or PostGIS), add a 300ms debounce, a stale-response guard,
     a 2-character minimum, and keep local suggestions visible while the server ones load.
 
+17. **Same-day rentals and unseen requests:** a renter wants gear this afternoon and the host does not see
+    the request. Today the host has 24 hours to respond (BKG-06), notifications are static UI with no push,
+    and nothing expires ignored requests, so a pending request blocks the dates and the renter waits with no
+    way to plan. Effects: lost rental and commission, a bad first impression for the renter, a missed or
+    stale request for the host, and off-platform deals. Options to decide: a same-day flag with a 1 to 2
+    hour window, push then SMS or email fallback, automatic expiry with a "try similar gear" next step,
+    host response rate and availability hours, Instant Book for trusted hosts, requests to several hosts at
+    once. Start with real alerts and automatic expiry. See also `ARCHITECTURE.md` section 9.3 item 3.
+
 **Housekeeping**
-17. Failing tests not from this work: `test/widget_test.dart` (template, `MyApp` missing) and
+18. Failing tests not from this work: `test/widget_test.dart` (template, `MyApp` missing) and
     `create_booking_request_test.dart`.
-18. The Home redesign, listing card, heart and categories are committed on `feature/home-redesign`; the
-    search work (full-screen search, recent searches, suggestions) is not committed yet.
+19. The Home redesign, listing card, heart, categories and search are committed on `feature/home-redesign`;
+    the branch still needs pushing and a pull request into `develop`.
 
 ### Known UI Issues
 
