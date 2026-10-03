@@ -8,14 +8,31 @@ import '../../../listings/domain/entities/listing_categories.dart';
 import '../../../listings/domain/entities/listing_filter.dart';
 import '../../../listings/presentation/providers/browse_providers.dart';
 import '../../../listings/presentation/widgets/category_icons.dart';
+import 'all_categories_sheet.dart';
 
 /// Scrolling row of categories, each a solid circle with an icon. Tapping one
 /// opens Browse on it. It follows [kListingCategories], so a new category only
-/// needs an icon here.
+/// needs an icon in `categoryIcon`. The last tile, "All", opens a sheet with
+/// every category at once.
 class HomeCategoryRow extends ConsumerWidget {
   const HomeCategoryRow({required this.onBrowseTap, super.key});
 
   final VoidCallback onBrowseTap;
+
+  void _openAllCategories(BuildContext context, WidgetRef ref) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      backgroundColor: AppColors.kColorBackground,
+      builder: (sheetContext) => AllCategoriesSheet(
+        onPick: (category) {
+          Navigator.of(sheetContext).pop();
+          ref.read(browseCategoryProvider.notifier).state = category;
+          onBrowseTap();
+        },
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -36,6 +53,12 @@ class HomeCategoryRow extends ConsumerWidget {
                 onBrowseTap();
               },
             ),
+          _CategoryTile(
+            label: 'All',
+            icon: Icons.grid_view_rounded,
+            isSeeAll: true,
+            onTap: () => _openAllCategories(context, ref),
+          ),
         ],
       ),
     );
@@ -47,11 +70,16 @@ class _CategoryTile extends StatelessWidget {
     required this.label,
     required this.icon,
     required this.onTap,
+    this.isSeeAll = false,
   });
 
   final String label;
   final IconData icon;
   final VoidCallback onTap;
+
+  /// The "All" tile at the end: an outlined circle, so it reads as a way to
+  /// see more and not as one more category.
+  final bool isSeeAll;
 
   /// 64 + 8: wide enough for the longest label, and 4.5 tiles fit a phone so
   /// the next one peeks out and shows the row scrolls.
@@ -86,14 +114,21 @@ class _CategoryTile extends StatelessWidget {
                   Container(
                     width: _kCircleSize,
                     height: _kCircleSize,
-                    decoration: const BoxDecoration(
-                      color: AppColors.kColorPrimary,
+                    decoration: BoxDecoration(
+                      color: isSeeAll
+                          ? AppColors.kColorSurface
+                          : AppColors.kColorPrimary,
                       shape: BoxShape.circle,
+                      border: isSeeAll
+                          ? Border.all(color: AppColors.kColorBorderDark)
+                          : null,
                     ),
                     child: Icon(
                       icon,
                       size: AppSpacing.kIconLarge,
-                      color: AppColors.kColorOnPrimary,
+                      color: isSeeAll
+                          ? AppColors.kColorPrimary
+                          : AppColors.kColorOnPrimary,
                     ),
                   ),
                   const SizedBox(height: AppSpacing.kSpacing8),
